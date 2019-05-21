@@ -1,9 +1,0 @@
- Volume in drive C is Windows
- Volume Serial Number is F242-EE11
-
- Directory of C:\Users\Michelle\Documents\REDI\sketches_png\png
-
-02/12/2011  23:37           353.694 filelist.txt
-20/05/2019  12:14                 0 filenames.txt
-               2 File(s)        353.694 bytes
-               0 Dir(s)  15.901.196.288 bytes free
