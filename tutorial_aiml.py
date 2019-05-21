@@ -14,23 +14,22 @@ from torchvision import datasets;
 
 # Hyperparameters
 num_epochs = 5;
-num_classes = 10;
-batch_size = 100;
+num_classes = 5;
+batch_size = 50;
 learning_rate = 0.001;
-train_dir =  r"./data/train"
-test_dir =  r"./data/test"
+train_dir =  r"./data/train_sub"
+test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
 
 # Sketch data
 trans = transforms.Compose([
             transforms.Grayscale(1),
-            transforms.Resize([1111, 1111]),
+            transforms.Resize([28, 28]),
             # transforms.CenterCrop(224),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5], std=[0.5]),
-            # transforms.Normalize(mean=[0.485, 0.456, 0.406],
-            #                     std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=[0.8], std=[0.2])
         ])
+
 trainset = datasets.ImageFolder(
         train_dir,
         transform=trans
@@ -74,8 +73,8 @@ class ConvNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
         self.drop_out = nn.Dropout()
-        self.fc1 = nn.Linear(253 * 253 * 64, 1000)
-        self.fc2 = nn.Linear(1000, 10)
+        self.fc1 = nn.Linear(7 * 7 * 64, 1000)
+        self.fc2 = nn.Linear(1000, num_classes)
 
     def forward(self, x):
         out = self.layer1(x)
@@ -113,7 +112,9 @@ def train_model(model):
             correct = (predicted == labels).sum().item()
             acc_list.append(correct / total)
 
-            if (i + 1) % 100 == 0:
+            #print(i, labels)
+
+            if (i + 1) % 25 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
