@@ -22,25 +22,22 @@ test_dir =  r"./data/test"
 MODEL_STORE_PATH = r"./model"
 
 # Sketch data
-trainset = datasets.ImageFolder(
-        train_dir,
-        transform=transforms.Compose([
-            transforms.Resize([28, 28]),
+trans = transforms.Compose([
+            transforms.Grayscale(1),
+            transforms.Resize([1111, 1111]),
             # transforms.CenterCrop(224),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=[0.5], std=[0.5]),
+            # transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            #                     std=[0.229, 0.224, 0.225])
         ])
+trainset = datasets.ImageFolder(
+        train_dir,
+        transform=trans
     )
 testset = datasets.ImageFolder(
         test_dir,
-        transform=transforms.Compose([
-            transforms.Resize([28, 28]),
-            # transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
-        ])
+        transform=trans
     )
 classes = trainset.classes
 
@@ -71,13 +68,13 @@ class ConvNet(nn.Module):
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2))
+            nn.MaxPool2d(kernel_size=2, stride=2, padding=1))
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
         self.drop_out = nn.Dropout()
-        self.fc1 = nn.Linear(7 * 7 * 64, 1000)
+        self.fc1 = nn.Linear(253 * 253 * 64, 1000)
         self.fc2 = nn.Linear(1000, 10)
 
     def forward(self, x):
