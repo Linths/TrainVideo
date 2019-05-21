@@ -10,22 +10,59 @@ from bokeh.plotting import figure
 from bokeh.io import show
 from bokeh.models import LinearAxis, Range1d
 import numpy as np
+from torchvision import datasets;
 
 # Hyperparameters
 num_epochs = 5;
 num_classes = 10;
 batch_size = 100;
 learning_rate = 0.001;
+train_dir =  r"./data/train"
+test_dir =  r"./data/test"
+MODEL_STORE_PATH = r"./model"
 
-DATA_PATH = "./aiml/data";
-MODEL_STORE_PATH = "./aiml/model";
+# Sketch data
+trainset = datasets.ImageFolder(
+        train_dir,
+        transform=transforms.Compose([
+            transforms.Resize([28, 28]),
+            # transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+        ])
+    )
+testset = datasets.ImageFolder(
+        test_dir,
+        transform=transforms.Compose([
+            transforms.Resize([28, 28]),
+            # transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+        ])
+    )
+classes = trainset.classes
 
-# Loading data
-trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]);
-train_dataset = torchvision.datasets.MNIST(root=DATA_PATH, train=True, transform=trans, download=True);
-test_dataset = torchvision.datasets.MNIST(root=DATA_PATH, train=False, transform=trans);
-train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True);
-test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False);
+# Load data
+train_loader = DataLoader(dataset=trainset, batch_size=batch_size, shuffle=True);
+test_loader = DataLoader(dataset=testset, batch_size=batch_size, shuffle=False);
+
+# Show random images
+def show_images():
+    # Get some random training images
+    dataiter = iter(train_loader);
+    images, labels = dataiter.next();
+    # Show images
+    imshow(torchvision.utils.make_grid(images));
+    # Print labels
+    print(' '.join('%5s' % classes[labels[j]] for j in range(4)));
+
+def imshow(img):
+    img = img / 2 + 0.5;    # Unnormalize
+    npimg = img.numpy();
+    plt.imshow(np.transpose(npimg, (1,2,0)));
+    plt.show();
 
 # Creating the model
 class ConvNet(nn.Module):
@@ -111,6 +148,7 @@ def plot_results(loss_list, acc_list):
     show(p)
 
 if __name__ == '__main__':
+    show_images();
     m = ConvNet()
     losses, accuracies = train_model(m)
     test_model(m)
