@@ -18,10 +18,10 @@ import sklearn.cluster as cluster
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
 
 # Hyperparameters
-num_epochs = 10;
-num_classes = 5;
+num_epochs = 100;
+num_classes = 15;
 batch_size = 50;
-learning_rate = 0.001;
+learning_rate = 0.01;
 train_dir =  r"./data/train_sub"
 test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
@@ -132,7 +132,9 @@ def train_model(model):
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
-        make_vis()
+        print(epoch)
+        if (epoch + 1) % 10 == 0:
+            make_vis()
     return loss_list, acc_list
 
 def test_model(model):
