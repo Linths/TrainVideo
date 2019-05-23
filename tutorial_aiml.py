@@ -169,7 +169,7 @@ def make_vis():
     # print(VIS_DATA)
     # print(VIS_TARGET)
     standard_embedding = umap.UMAP(random_state=42).fit_transform(VIS_DATA)
-    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=0.1, cmap='Spectral');
+    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
     plt.show()
     VIS_DATA.clear()
     VIS_TARGET.clear()
