@@ -11,15 +11,22 @@ from bokeh.io import show
 from bokeh.models import LinearAxis, Range1d
 import numpy as np
 from torchvision import datasets;
+import seaborn as sns
+import umap
+import hdbscan
+import sklearn.cluster as cluster
+from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
 
 # Hyperparameters
-num_epochs = 5;
+num_epochs = 10;
 num_classes = 5;
 batch_size = 50;
 learning_rate = 0.001;
 train_dir =  r"./data/train_sub"
 test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
+VIS_DATA = []
+VIS_TARGET = []
 
 # Sketch data
 trans = transforms.Compose([
@@ -79,9 +86,12 @@ class ConvNet(nn.Module):
     def forward(self, x):
         out = self.layer1(x)
         out = self.layer2(out)
+        # print("Layer2")
+        # print(out)
         out = out.reshape(out.size(0), -1)
         out = self.drop_out(out)
         out = self.fc1(out)
+        VIS_DATA.extend(out.detach().numpy())
         out = self.fc2(out)
         return out
 
@@ -95,9 +105,12 @@ def train_model(model):
     loss_list = []
     acc_list = []
     for epoch in range(num_epochs):
+        # Per batch
         for i, (images, labels) in enumerate(train_loader):
+            # Batch i
             # Run the forward pass
             outputs = model(images)
+            VIS_TARGET.extend(labels.numpy())
             loss = criterion(outputs, labels)
             loss_list.append(loss.item())
 
@@ -109,6 +122,7 @@ def train_model(model):
             # Track the accuracy
             total = labels.size(0)
             _, predicted = torch.max(outputs.data, 1)
+            # VIS_TARGET.extend(predicted.item())
             correct = (predicted == labels).sum().item()
             acc_list.append(correct / total)
 
@@ -118,6 +132,7 @@ def train_model(model):
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
+        make_vis()
     return loss_list, acc_list
 
 def test_model(model):
@@ -144,6 +159,20 @@ def plot_results(loss_list, acc_list):
     p.line(np.arange(len(loss_list)), loss_list)
     p.line(np.arange(len(loss_list)), np.array(acc_list) * 100, y_range_name='Accuracy', color='red')
     show(p)
+
+def make_vis():
+    sns.set(style='white', rc={'figure.figsize':(10,8)})
+    # mnist = load_digits()
+    # print(mnist)
+    # mnist = fetch_openml('mnist_784')
+    # print(mnist.data)
+    # print(VIS_DATA)
+    # print(VIS_TARGET)
+    standard_embedding = umap.UMAP(random_state=42).fit_transform(VIS_DATA)
+    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=0.1, cmap='Spectral');
+    plt.show()
+    VIS_DATA.clear()
+    VIS_TARGET.clear()
 
 if __name__ == '__main__':
     show_images();
