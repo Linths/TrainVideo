@@ -18,8 +18,8 @@ import sklearn.cluster as cluster
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
 
 # Hyperparameters
-num_epochs = 100;
-num_classes = 15;
+num_epochs = 10;
+num_classes = 10;
 batch_size = 50;
 learning_rate = 0.01;
 train_dir =  r"./data/train_sub"
@@ -74,7 +74,7 @@ class ConvNet(nn.Module):
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=1))
+            nn.MaxPool2d(kernel_size=2, stride=2))
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
@@ -133,8 +133,10 @@ def train_model(model):
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
         print(epoch)
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 2 == 0:
             make_vis()
+        VIS_DATA.clear()
+        VIS_TARGET.clear()
     return loss_list, acc_list
 
 def test_model(model):
@@ -155,7 +157,7 @@ def test_model(model):
     torch.save(model.state_dict(), MODEL_STORE_PATH + 'conv_net_model.ckpt')
 
 def plot_results(loss_list, acc_list):
-    p = figure(y_axis_label='Loss', width=850, y_range=(0, 1), title='PyTorch ConvNet results')
+    p = figure(y_axis_label='Loss', width=850, y_range=(0, 1), title=f'Performance of \"sketches\" CNN [#classes = {num_classes}, batch size = {batch_size}, #epochs = {num_epochs}, learning rate = {learning_rate}]')
     p.extra_y_ranges = {'Accuracy': Range1d(start=0, end=100)}
     p.add_layout(LinearAxis(y_range_name='Accuracy', axis_label='Accuracy (%)'), 'right')
     p.line(np.arange(len(loss_list)), loss_list)
@@ -170,11 +172,15 @@ def make_vis():
     # print(mnist.data)
     # print(VIS_DATA)
     # print(VIS_TARGET)
-    standard_embedding = umap.UMAP(random_state=42).fit_transform(VIS_DATA)
-    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
+    
+    neighs = [3, 15, 50, 100]
+    for i in range(4):
+        plt.subplot(2,2,i+1)
+        standard_embedding = umap.UMAP(random_state=42, n_neighbors=neighs[i]).fit_transform(VIS_DATA)
+        plt.title(f"#neighbors = {neighs[i]}")
+        plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
+
     plt.show()
-    VIS_DATA.clear()
-    VIS_TARGET.clear()
 
 if __name__ == '__main__':
     show_images();
