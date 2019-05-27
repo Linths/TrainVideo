@@ -18,18 +18,29 @@ import sklearn.cluster as cluster
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
 
 # Hyperparameters
-num_epochs = 100;
+num_epochs = 10;
 num_classes = 15;
 batch_size = 50;
-learning_rate = 0.01;
+learning_rate = 0.1;
 train_dir =  r"./data/train_sub"
 test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
 VIS_DATA = []
 VIS_TARGET = []
+VIS_OUT = []
 
 # Sketch data
-trans = transforms.Compose([
+train_trans = transforms.Compose([
+            transforms.Grayscale(1),
+            transforms.Resize([28, 28]),
+            transforms.RandomRotation(10), 
+            transforms.RandomHorizontalFlip(),
+            # transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.8], std=[0.2])
+        ])
+
+test_trans = transforms.Compose([
             transforms.Grayscale(1),
             transforms.Resize([28, 28]),
             # transforms.CenterCrop(224),
@@ -39,11 +50,12 @@ trans = transforms.Compose([
 
 trainset = datasets.ImageFolder(
         train_dir,
-        transform=trans
+        transform=train_trans
     )
+print(trainset)
 testset = datasets.ImageFolder(
         test_dir,
-        transform=trans
+        transform=test_trans
     )
 classes = trainset.classes
 
@@ -70,15 +82,17 @@ def imshow(img):
 # Creating the model
 class ConvNet(nn.Module):
     def __init__(self):
+        # W_out = (W_in - Kernel + 2*Padding)/(Stride) + 1
+        # input size = 28 x 28
         super(ConvNet, self).__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),# Conv2d = (28 - 5 + 2*2)/1 + 1 = 28
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=1))
+            nn.MaxPool2d(kernel_size=2, stride=2))# Maxpool = (28 - 2 + 0)/2 + 1 = 14
         self.layer2 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),# Conv2d = (14 - 5 + 2*2)/1 + 1 = 14
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2))
+            nn.MaxPool2d(kernel_size=2, stride=2))# Maxpool = (14 - 2 + 0)/2 + 1 = 7
         self.drop_out = nn.Dropout()
         self.fc1 = nn.Linear(7 * 7 * 64, 1000)
         self.fc2 = nn.Linear(1000, num_classes)
@@ -86,18 +100,20 @@ class ConvNet(nn.Module):
     def forward(self, x):
         out = self.layer1(x)
         out = self.layer2(out)
-        # print("Layer2")
-        # print(out)
         out = out.reshape(out.size(0), -1)
         out = self.drop_out(out)
         out = self.fc1(out)
         VIS_DATA.extend(out.detach().numpy())
         out = self.fc2(out)
+        VIS_OUT.extend(out.detach().numpy())
         return out
 
 def train_model(model):
     # Loss and optimizer
-    criterion = nn.CrossEntropyLoss()
+    logsoftmax = nn.LogSoftmax(dim=1)
+    nllloss = nn.NLLLoss()
+    #softmax = nn.Softmax(dim=1)
+    #criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Train the model
@@ -111,7 +127,10 @@ def train_model(model):
             # Run the forward pass
             outputs = model(images)
             VIS_TARGET.extend(labels.numpy())
-            loss = criterion(outputs, labels)
+            #soft = softmax(outputs)
+            loss_log = logsoftmax(outputs)
+            loss = nllloss(loss_log, labels)
+            #loss = criterion(outputs, labels)
             loss_list.append(loss.item())
 
             # Backprop and perform Adam optimisation
@@ -126,15 +145,16 @@ def train_model(model):
             correct = (predicted == labels).sum().item()
             acc_list.append(correct / total)
 
-            #print(i, labels)
-
             if (i + 1) % 25 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
         print(epoch)
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 5 == 0:
             make_vis()
+        VIS_DATA.clear()
+        VIS_TARGET.clear()
+        VIS_OUT.clear()
     return loss_list, acc_list
 
 def test_model(model):
@@ -164,17 +184,9 @@ def plot_results(loss_list, acc_list):
 
 def make_vis():
     sns.set(style='white', rc={'figure.figsize':(10,8)})
-    # mnist = load_digits()
-    # print(mnist)
-    # mnist = fetch_openml('mnist_784')
-    # print(mnist.data)
-    # print(VIS_DATA)
-    # print(VIS_TARGET)
     standard_embedding = umap.UMAP(random_state=42).fit_transform(VIS_DATA)
-    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
+    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=10, cmap='tab20');
     plt.show()
-    VIS_DATA.clear()
-    VIS_TARGET.clear()
 
 if __name__ == '__main__':
     show_images();
