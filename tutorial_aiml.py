@@ -4,37 +4,45 @@ from torch.nn import *;
 from torch.utils.data import DataLoader;
 import torchvision;
 import torchvision.transforms as transforms;
-import matplotlib.pyplot as plt;
-import numpy as np;
+from torchvision import datasets;
+
 from bokeh.plotting import figure
 from bokeh.io import show
 from bokeh.models import LinearAxis, Range1d
-import numpy as np
-from torchvision import datasets;
+
 import seaborn as sns
 import umap
 import hdbscan
 import sklearn.cluster as cluster
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
-import math
 
-# Hyperparameters
-# General NN settings
-num_epochs = 10
+import matplotlib.pyplot as plt;
+import numpy as np;
+import math
+import datetime
+import os
+
+# Hyperparameters, general NN settings
+num_epochs = 5
 num_classes = 10
 batch_size = 50
 learning_rate = 0.01
+
 # Data access
 train_dir =  r"./data/train_sub"
 test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
+
 # NN scaling params
 image_width = 64    # Image width / height
 no_dimens = 1000    # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
 
-# Visualization data storage
+# Visualization
+show_after_epochs = 1
 VIS_DATA = []
 VIS_TARGET = []
+
+start_time = datetime.datetime.now();
 
 # Sketch data
 trans = transforms.Compose([
@@ -106,8 +114,6 @@ class ConvNet(nn.Module):
         fc1_size = w4 * w4 * ch4
         fc2_size = no_dimens
 
-        # print(f"w1={w1}, w2={w2}, w3={w3}, fc1_size = {fc1_size}")
-
         self.layer1 = nn.Sequential(
             nn.Conv2d(1, ch1, kernel_size=k1, stride=s1, padding=p1),
             nn.ReLU(),
@@ -170,8 +176,8 @@ def train_model(model):
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
         print(epoch)
-        if (epoch + 1) % 2 == 0:
-            make_vis()
+        if (epoch + 1) % show_after_epochs == 0:
+            make_vis(epoch + 1)
         VIS_DATA.clear()
         VIS_TARGET.clear()
     return loss_list, acc_list
@@ -201,7 +207,7 @@ def plot_results(loss_list, acc_list):
     p.line(np.arange(len(loss_list)), np.array(acc_list) * 100, y_range_name='Accuracy', color='red')
     show(p)
 
-def make_vis():
+def make_vis(epochs_passed):
     sns.set(style='white', rc={'figure.figsize':(10,8)})
     # mnist = load_digits()
     # print(mnist)
@@ -217,6 +223,12 @@ def make_vis():
         plt.title(f"#neighbors = {neighs[i]}")
         plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
 
+    plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
+    path = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
+    if not os.path.exists(path):
+        os.mkdir(path)
+    # TODO bbox_inches='tight' kan helpen
+    plt.savefig(f"{path}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
     plt.show()
 
 if __name__ == '__main__':
