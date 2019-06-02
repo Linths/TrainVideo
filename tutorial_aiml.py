@@ -24,14 +24,14 @@ import os
 import cv2
 
 # Hyperparameters, general NN settings
-num_epochs = 1
+num_epochs = 30
 num_classes = 10
 batch_size = 50
-learning_rate = 0.01
+learning_rate = 0.05
 
 # Data access
-train_dir =  r"./data/train_sub"
-test_dir =  r"./data/test_sub"
+train_dir =  r"./data/train_sub_2"
+test_dir =  r"./data/test_sub_2"
 MODEL_STORE_PATH = r"./model"
 start_time = datetime.datetime.now();
 output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
@@ -41,7 +41,7 @@ image_width = 64    # Image width / height
 no_dimens = 1000    # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
 
 # Visualization
-show_after_epochs = 1
+show_after_epochs = 10
 VIS_DATA = []
 VIS_TARGET = []
 VIS_OUT = []
@@ -50,9 +50,11 @@ VIS_OUT = []
 train_trans = transforms.Compose([
     transforms.Grayscale(1),
     transforms.Resize([image_width, image_width]),
-    # transforms.RandomRotation(10),
-    # transforms.RandomHorizontalFlip(),
-    # transforms.CenterCrop(224),
+    transforms.RandomAffine(10, translate=(0.2,0.2), scale=(0.75,1.33), fillcolor=255),
+    #transforms.RandomRotation(10),
+    transforms.RandomHorizontalFlip(),
+    # translation?
+    # transforms.CenterCrop(224), and rescale
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.8], std=[0.2])
 ])
@@ -152,10 +154,10 @@ class ConvNet(nn.Module):
 
 def train_model(model):
     # Loss and optimizer
-    logsoftmax = nn.LogSoftmax(dim=1)
-    nllloss = nn.NLLLoss()
+    #logsoftmax = nn.LogSoftmax(dim=1)
+    #nllloss = nn.NLLLoss()
     #softmax = nn.Softmax(dim=1)
-    #criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Train the model
@@ -170,9 +172,9 @@ def train_model(model):
             outputs = model(images)
             VIS_TARGET.extend(labels.numpy())
             #soft = softmax(outputs)
-            loss_log = logsoftmax(outputs)
-            loss = nllloss(loss_log, labels)
-            #loss = criterion(outputs, labels)
+            #loss_log = logsoftmax(outputs)
+            #loss = nllloss(loss_log, labels)
+            loss = criterion(outputs, labels)
             loss_list.append(loss.item())
 
             # Backprop and perform Adam optimisation
@@ -196,6 +198,7 @@ def train_model(model):
             make_vis(epoch + 1)
         VIS_DATA.clear()
         VIS_TARGET.clear()
+        VIS_OUT.clear()
     return loss_list, acc_list
 
 def test_model(model):
@@ -225,13 +228,6 @@ def plot_results(loss_list, acc_list):
 
 def make_vis(epochs_passed):
     sns.set(style='white', rc={'figure.figsize':(10,8)})
-    # mnist = load_digits()
-    # print(mnist)
-    # mnist = fetch_openml('mnist_784')
-    # print(mnist.data)
-    # print(VIS_DATA)
-    # print(VIS_TARGET)
-
     neighs = [3, 10, 15, 50]
     for i in range(4):
         plt.subplot(2,2,i+1)
