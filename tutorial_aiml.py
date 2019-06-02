@@ -244,7 +244,7 @@ def make_vis(epochs_passed):
     plt.show()
 
 def make_video():
-    output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
+    # Uncomment for manual test output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
     images = []
     for filename in os.listdir(output_dir):
         img = cv2.imread(output_dir + "/" + filename)
@@ -260,10 +260,10 @@ def make_video():
     out.release()
 
 if __name__ == '__main__':
-    # show_images();
-    # m = ConvNet()
-    # losses, accuracies = train_model(m)
-    # m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
-    # test_model(m)
-    # plot_results(losses, accuracies)
+    show_images();
+    m = ConvNet()
+    losses, accuracies = train_model(m)
+    # Load a model instead: m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
+    test_model(m)
+    plot_results(losses, accuracies)
     make_video()
