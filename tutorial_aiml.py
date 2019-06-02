@@ -21,9 +21,10 @@ import numpy as np;
 import math
 import datetime
 import os
+import cv2
 
 # Hyperparameters, general NN settings
-num_epochs = 5
+num_epochs = 1
 num_classes = 10
 batch_size = 50
 learning_rate = 0.01
@@ -32,6 +33,8 @@ learning_rate = 0.01
 train_dir =  r"./data/train_sub"
 test_dir =  r"./data/test_sub"
 MODEL_STORE_PATH = r"./model"
+start_time = datetime.datetime.now();
+output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
 
 # NN scaling params
 image_width = 64    # Image width / height
@@ -43,36 +46,33 @@ VIS_DATA = []
 VIS_TARGET = []
 VIS_OUT = []
 
-start_time = datetime.datetime.now();
-
 # Sketch data
 train_trans = transforms.Compose([
-            transforms.Grayscale(1),
-            transforms.Resize([28, 28]),
-            transforms.RandomRotation(10),
-            transforms.RandomHorizontalFlip(),
-            # transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.8], std=[0.2])
-        ])
+    transforms.Grayscale(1),
+    transforms.Resize([image_width, image_width]),
+    # transforms.RandomRotation(10),
+    # transforms.RandomHorizontalFlip(),
+    # transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.8], std=[0.2])
+])
 
 test_trans = transforms.Compose([
-            transforms.Grayscale(1),
-            transforms.Resize([image_width, image_width]),
-            # transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.8], std=[0.2])
-        ])
+    transforms.Grayscale(1),
+    transforms.Resize([image_width, image_width]),
+    # transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.8], std=[0.2])
+])
 
 trainset = datasets.ImageFolder(
-        train_dir,
-        transform=train_trans
-    )
-print(trainset)
+    train_dir,
+    transform=train_trans
+)
 testset = datasets.ImageFolder(
-        test_dir,
-        transform=test_trans
-    )
+    test_dir,
+    transform=test_trans
+)
 classes = trainset.classes
 
 # Load data
@@ -99,7 +99,6 @@ def imshow(img):
 class ConvNet(nn.Module):
     def __init__(self):
         # W_out = (W_in - Kernel + 2*Padding)/(Stride) + 1
-        # input size = 28 x 28
         super(ConvNet, self).__init__()
         # Input
         w0 = image_width
@@ -192,7 +191,7 @@ def train_model(model):
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
                             (correct / total) * 100))
-        print(epoch)
+        print(epoch + 1)
         if (epoch + 1) % show_after_epochs == 0:
             make_vis(epoch + 1)
         VIS_DATA.clear()
@@ -241,16 +240,34 @@ def make_vis(epochs_passed):
         plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
 
     plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
-    path = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
-    if not os.path.exists(path):
-        os.mkdir(path)
+    
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     # TODO bbox_inches='tight' kan helpen
-    plt.savefig(f"{path}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+    plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
     plt.show()
 
+def make_video():
+    output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
+    images = []
+    for filename in os.listdir(output_dir):
+        img = cv2.imread(output_dir + "/" + filename)
+        height, width, layers = img.shape
+        size = (width,height)
+        images.append(img)
+    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+    video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
+    out = cv2.VideoWriter(video_dir, fourcc, 20, size)
+    for i in range(len(images)):
+        print(f"written image {i}")
+        out.write(images[i])
+    out.release()
+
 if __name__ == '__main__':
-    show_images();
-    m = ConvNet()
-    losses, accuracies = train_model(m)
-    test_model(m)
-    plot_results(losses, accuracies)
+    # show_images();
+    # m = ConvNet()
+    # losses, accuracies = train_model(m)
+    # m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
+    # test_model(m)
+    # plot_results(losses, accuracies)
+    make_video()
