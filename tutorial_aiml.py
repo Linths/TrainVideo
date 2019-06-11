@@ -12,22 +12,31 @@ from bokeh.models import LinearAxis, Range1d
 
 import seaborn as sns
 import umap
-import hdbscan
-import sklearn.cluster as cluster
-from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score
 
 import matplotlib.pyplot as plt;
 import numpy as np;
 import math
 import datetime
 import os
-import cv2
+#import cv2
+
+# =============================================================================
+# TODO:
+#     - data punten vervangen door plaatjes (achtergrondkleur = class)
+#     - andere lagen visualiseren
+#     - test class visualiseren
+#     - model opslaan/laden
+#     - video opties aanpassen
+#     - draaien op cluster
+# 
+# =============================================================================
+
 
 # Hyperparameters, general NN settings
-num_epochs = 30
+num_epochs = 150
 num_classes = 10
 batch_size = 50
-learning_rate = 0.05
+learning_rate = 0.001
 
 # Data access
 train_dir =  r"./data/train_sub_2"
@@ -41,18 +50,20 @@ image_width = 64    # Image width / height
 no_dimens = 1000    # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
 
 # Visualization
-show_after_epochs = 10
+show_after_epochs = 5
 VIS_DATA = []
 VIS_TARGET = []
 VIS_OUT = []
+VIS_ACC = []
+VIS_TEST = []
 
 # Sketch data
 train_trans = transforms.Compose([
     transforms.Grayscale(1),
     transforms.Resize([image_width, image_width]),
-    transforms.RandomAffine(10, translate=(0.2,0.2), scale=(0.75,1.33), fillcolor=255),
+    #transforms.RandomAffine(10, translate=(0.2,0.2), scale=(0.75,1.33), fillcolor=255),
     #transforms.RandomRotation(10),
-    transforms.RandomHorizontalFlip(),
+    #transforms.RandomHorizontalFlip(),
     # translation?
     # transforms.CenterCrop(224), and rescale
     transforms.ToTensor(),
@@ -76,7 +87,7 @@ testset = datasets.ImageFolder(
     transform=test_trans
 )
 classes = trainset.classes
-
+print(classes)
 # Load data
 train_loader = DataLoader(dataset=trainset, batch_size=batch_size, shuffle=True);
 test_loader = DataLoader(dataset=testset, batch_size=batch_size, shuffle=False);
@@ -147,9 +158,12 @@ class ConvNet(nn.Module):
         out = out.reshape(out.size(0), -1)
         out = self.drop_out(out)
         out = self.fc1(out)
-        VIS_DATA.extend(out.detach().numpy())
+        #print(len(VIS_DATA))
+        if len(VIS_DATA)<len(trainset):
+            VIS_DATA.extend(out.detach().numpy())
         out = self.fc2(out)
-        VIS_OUT.extend(out.detach().numpy())
+        if len(VIS_DATA)<len(trainset):
+            VIS_OUT.extend(out.detach().numpy())
         return out
 
 def train_model(model):
@@ -166,6 +180,8 @@ def train_model(model):
     acc_list = []
     for epoch in range(num_epochs):
         # Per batch
+        total_totals = 0
+        total_correct = 0
         for i, (images, labels) in enumerate(train_loader):
             # Batch i
             # Run the forward pass
@@ -176,7 +192,9 @@ def train_model(model):
             #loss = nllloss(loss_log, labels)
             loss = criterion(outputs, labels)
             loss_list.append(loss.item())
-
+            
+            # VIS_LOSS_TEMP.append(loss.item())
+            
             # Backprop and perform Adam optimisation
             optimizer.zero_grad()
             loss.backward()
@@ -184,24 +202,31 @@ def train_model(model):
 
             # Track the accuracy
             total = labels.size(0)
+            total_totals += total
             _, predicted = torch.max(outputs.data, 1)
             # VIS_TARGET.extend(predicted.item())
             correct = (predicted == labels).sum().item()
-            acc_list.append(correct / total)
-
-            if (i + 1) % 25 == 0:
-                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                    .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
-                            (correct / total) * 100))
-        print(epoch + 1)
+            total_correct += correct
+            accuracy = correct/total
+            acc_list.append(accuracy)
+            
+            if (i + 1) % 20 == 0:
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'.format(epoch + 1, num_epochs, i + 1, total_step, loss.item(), (accuracy) * 100))
+        #print(total_correct,'/',total_totals,'=',total_correct/total_totals)
+        # VIS_LOSS.append((epoch+1,sum(VIS_LOSS_TEMP)/len(VIS_LOSS_TEMP)))
+        # print(VIS_LOSS)
+        if epoch == 0:
+            test_model(model, epoch)
+        VIS_ACC.append((epoch+1,total_correct/total_totals))
         if (epoch + 1) % show_after_epochs == 0:
+            test_model(model, epoch)
             make_vis(epoch + 1)
         VIS_DATA.clear()
         VIS_TARGET.clear()
         VIS_OUT.clear()
     return loss_list, acc_list
 
-def test_model(model):
+def test_model(model, epoch):
     # Test the model
     model.eval()
     with torch.no_grad():
@@ -211,10 +236,11 @@ def test_model(model):
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
+            #print(predicted, labels)
             correct += (predicted == labels).sum().item()
 
-        print('Test Accuracy of the model on the 10000 test images: {} %'.format((correct / total) * 100))
-
+        print('Test Accuracy of the model on the 200 test images: {} %'.format((correct / total) * 100))
+        VIS_TEST.append((epoch+1,correct/total))
     # Save the model and plot
     torch.save(model.state_dict(), MODEL_STORE_PATH + 'conv_net_model.ckpt')
 
@@ -226,15 +252,28 @@ def plot_results(loss_list, acc_list):
     p.line(np.arange(len(loss_list)), np.array(acc_list) * 100, y_range_name='Accuracy', color='red')
     show(p)
 
+from matplotlib.lines import Line2D
+import matplotlib.colors as colors
 def make_vis(epochs_passed):
     sns.set(style='white', rc={'figure.figsize':(10,8)})
-    neighs = [3, 10, 15, 50]
-    for i in range(4):
+    neighs = [3, 15, 50]
+    for i in range(3):
         plt.subplot(2,2,i+1)
         standard_embedding = umap.UMAP(random_state=42, n_neighbors=neighs[i]).fit_transform(VIS_DATA)
         plt.title(f"#neighbors = {neighs[i]}")
-        plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap='Spectral');
-
+        cmap=plt.cm.hsv  #Spectral #misschien .hsv (regenboog)
+        new_cmap = colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name,a=0.0, b=0.9),cmap(np.linspace(0.0,0.9,10)))
+        plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap=new_cmap);
+    legend_colors = []
+    for j in range(len(classes)):
+        legend_colors.append(Line2D([0],[0],marker='o',color='w',label=classes[j],
+                markerfacecolor=new_cmap(j/9),markersize=10))
+    plt.legend(handles=legend_colors, loc='lower right')
+    plt.subplot(2,2,4)
+    plt.plot(*zip(*VIS_ACC), label='train set')
+    plt.plot(*zip(*VIS_TEST), label='test set')
+    # plt.plot(*zip(*VIS_LOSS), label='loss train set')
+    plt.legend(loc='lower right')
     plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
     
     if not os.path.exists(output_dir):
@@ -243,28 +282,30 @@ def make_vis(epochs_passed):
     plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
     plt.show()
 
-def make_video():
-    # Uncomment for manual test output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
-    images = []
-    for filename in os.listdir(output_dir):
-        img = cv2.imread(output_dir + "/" + filename)
-        height, width, layers = img.shape
-        size = (width,height)
-        images.append(img)
-    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-    video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
-    fps = 20
-    out = cv2.VideoWriter(video_dir, fourcc, fps, size)
-    for i in range(len(images)):
-        print(f"written image {i}")
-        out.write(images[i])
-    out.release()
+# =============================================================================
+# def make_video():
+#     # Uncomment for manual test output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
+#     images = []
+#     for filename in os.listdir(output_dir):
+#         img = cv2.imread(output_dir + "/" + filename)
+#         height, width, layers = img.shape
+#         size = (width,height)
+#         images.append(img)
+#     fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+#     video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
+#     fps = 20
+#     out = cv2.VideoWriter(video_dir, fourcc, fps, size)
+#     for i in range(len(images)):
+#         print(f"written image {i}")
+#         out.write(images[i])
+#     out.release()
+# =============================================================================
 
 if __name__ == '__main__':
     show_images();
     m = ConvNet()
     losses, accuracies = train_model(m)
     # Load a model instead: m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
-    test_model(m)
+    test_model(m, num_epochs)
     plot_results(losses, accuracies)
-    make_video()
+    #make_video()
