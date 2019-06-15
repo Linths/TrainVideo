@@ -25,7 +25,7 @@ import os
 #     - data punten vervangen door plaatjes (achtergrondkleur = class)
 #     - andere lagen visualiseren
 #     - test class visualiseren
-#     - model opslaan/laden
+#     - (model opslaan/laden)
 #     - video opties aanpassen
 #     - draaien op cluster
 # 
@@ -33,29 +33,36 @@ import os
 
 
 # Hyperparameters, general NN settings
-num_epochs = 150
+num_epochs = 25
 num_classes = 10
 batch_size = 50
 learning_rate = 0.001
 
 # Data access
-train_dir =  r"./data/train_sub_2"
-test_dir =  r"./data/test_sub_2"
+train_dir =  r"./data/train_diff"
+test_dir =  r"./data/test_diff"
 MODEL_STORE_PATH = r"./model"
 start_time = datetime.datetime.now();
 output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
 
 # NN scaling params
 image_width = 64    # Image width / height
-no_dimens = 1000    # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
+no_dimens = 100    # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
 
 # Visualization
-show_after_epochs = 5
+show_after_epochs = 1
 VIS_DATA = []
 VIS_TARGET = []
+VIS_PRED = []
+
+TEST_DATA = []
+TEST_TARGET = []
+TEST_PRED = []
+
 VIS_OUT = []
 VIS_ACC = []
 VIS_TEST = []
+
 
 # Sketch data
 train_trans = transforms.Compose([
@@ -161,9 +168,11 @@ class ConvNet(nn.Module):
         #print(len(VIS_DATA))
         if len(VIS_DATA)<len(trainset):
             VIS_DATA.extend(out.detach().numpy())
+        else:
+            TEST_DATA.extend(out.detach().numpy())
         out = self.fc2(out)
-        if len(VIS_DATA)<len(trainset):
-            VIS_OUT.extend(out.detach().numpy())
+        #if len(VIS_DATA)<len(trainset):
+        #    VIS_OUT.extend(out.detach().numpy())
         return out
 
 def train_model(model):
@@ -204,7 +213,7 @@ def train_model(model):
             total = labels.size(0)
             total_totals += total
             _, predicted = torch.max(outputs.data, 1)
-            # VIS_TARGET.extend(predicted.item())
+            VIS_PRED.extend(predicted.numpy())
             correct = (predicted == labels).sum().item()
             total_correct += correct
             accuracy = correct/total
@@ -223,6 +232,10 @@ def train_model(model):
             make_vis(epoch + 1)
         VIS_DATA.clear()
         VIS_TARGET.clear()
+        VIS_PRED.clear()
+        TEST_DATA.clear()
+        TEST_TARGET.clear()
+        TEST_PRED.clear()
         VIS_OUT.clear()
     return loss_list, acc_list
 
@@ -233,8 +246,10 @@ def test_model(model, epoch):
         correct = 0
         total = 0
         for images, labels in test_loader:
+            TEST_TARGET.extend(labels.numpy())
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
+            TEST_PRED.extend(predicted.numpy())
             total += labels.size(0)
             #print(predicted, labels)
             correct += (predicted == labels).sum().item()
@@ -256,30 +271,198 @@ from matplotlib.lines import Line2D
 import matplotlib.colors as colors
 def make_vis(epochs_passed):
     sns.set(style='white', rc={'figure.figsize':(10,8)})
-    neighs = [3, 15, 50]
-    for i in range(3):
-        plt.subplot(2,2,i+1)
-        standard_embedding = umap.UMAP(random_state=42, n_neighbors=neighs[i]).fit_transform(VIS_DATA)
-        plt.title(f"#neighbors = {neighs[i]}")
-        cmap=plt.cm.hsv  #Spectral #misschien .hsv (regenboog)
-        new_cmap = colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name,a=0.0, b=0.9),cmap(np.linspace(0.0,0.9,10)))
-        plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap=new_cmap);
+    cmap=plt.cm.hsv  #Spectral #misschien .hsv (regenboog)
+    new_cmap = colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name,a=0.0, b=0.9),cmap(np.linspace(0.0,0.9,10)))
+    
+    """
+    plt.subplot(2,3,1)
+    standard_embedding = umap.UMAP(random_state=42, n_neighbors=50).fit_transform(VIS_DATA)
+    plt.title(f"actual train")
+    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_TARGET, s=1, cmap=new_cmap)
+    
+    plt.subplot(2,3,2)
+    test_embedding = umap.UMAP(random_state=42, n_neighbors=50).fit_transform(TEST_DATA)
+    plt.title(f"actual test")
+    plt.scatter(test_embedding[:, 0], test_embedding[:, 1], c=TEST_TARGET, s=2, cmap=new_cmap)
+    
+    ax = plt.subplot(2,3,3)
     legend_colors = []
     for j in range(len(classes)):
         legend_colors.append(Line2D([0],[0],marker='o',color='w',label=classes[j],
                 markerfacecolor=new_cmap(j/9),markersize=10))
-    plt.legend(handles=legend_colors, loc='lower right')
-    plt.subplot(2,2,4)
+    ax.legend(handles=legend_colors, loc='center')
+    ax.yaxis.set_major_locator(plt.NullLocator())
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    
+    #markers = ['o','v','1','p','P','X','*','d','^','_']
+    #V_P_MARK = [markers[x] for x in VIS_PRED]
+    
+    #print(standard_embedding[:,0])
+    #print('------------')
+    #print(standard_embedding)
+    
+    plt.subplot(2,3,4)
+    plt.title(f"predicted train")
+    plt.scatter(standard_embedding[:, 0], standard_embedding[:, 1], c=VIS_PRED, s=1, cmap=new_cmap)
+    
+    plt.subplot(2,3,5)
+    plt.title(f"predicted test")
+    plt.scatter(test_embedding[:, 0], test_embedding[:, 1], c=TEST_PRED, s=2, cmap=new_cmap)
+    
+    plt.subplot(2,3,6)
+    plt.title(f"accuracy")
     plt.plot(*zip(*VIS_ACC), label='train set')
     plt.plot(*zip(*VIS_TEST), label='test set')
     # plt.plot(*zip(*VIS_LOSS), label='loss train set')
     plt.legend(loc='lower right')
+    
     plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
     
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
     # TODO bbox_inches='tight' kan helpen
     plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+    plt.show()
+    """
+    
+    
+    
+    #markers = ['o','v','s','p','P','X','*','d','^','$c$']
+    markers = ['$0$','$1$','$2$','$3$','$4$','$5$','$6$','$7$','$8$','$9$']
+    fit = umap.UMAP(random_state=42, n_neighbors=25)
+    standard_embedding = fit.fit_transform(VIS_DATA)
+    test_embedding = fit.fit_transform(TEST_DATA)
+    
+    #different marker style per actual class
+    #training set
+    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [],[],[],[],[],[],[],[],[],[]
+    for i in range(len(standard_embedding)):
+        if VIS_TARGET[i]==0:
+            t0.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==1:
+            t1.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==2:
+            t2.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==3:
+            t3.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==4:
+            t4.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==5:
+            t5.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==6:
+            t6.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==7:
+            t7.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==8:
+            t8.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+        if VIS_TARGET[i]==9:
+            t9.append([standard_embedding[i,0], standard_embedding[i,1],VIS_PRED[i],VIS_TARGET[i]])
+    
+    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = np.array(t0), np.array(t1), np.array(t2), np.array(t3), np.array(t4), np.array(t5), np.array(t6), np.array(t7), np.array(t8), np.array(t9)
+    
+    plt.subplot(2,3,1)
+    plt.title(f"actual train")
+    plt.scatter(t0[:, 0], t0[:, 1], s=50, color=new_cmap(0.01), marker=markers[0])
+    plt.scatter(t1[:, 0], t1[:, 1], s=50, color=new_cmap(0.12), marker=markers[1])
+    plt.scatter(t2[:, 0], t2[:, 1], s=50, color=new_cmap(0.23), marker=markers[2])
+    plt.scatter(t3[:, 0], t3[:, 1], s=50, color=new_cmap(0.34), marker=markers[3])
+    plt.scatter(t4[:, 0], t4[:, 1], s=50, color=new_cmap(0.45), marker=markers[4])
+    plt.scatter(t5[:, 0], t5[:, 1], s=50, color=new_cmap(0.56), marker=markers[5])
+    plt.scatter(t6[:, 0], t6[:, 1], s=50, color=new_cmap(0.67), marker=markers[6])
+    plt.scatter(t7[:, 0], t7[:, 1], s=50, color=new_cmap(0.78), marker=markers[7])
+    plt.scatter(t8[:, 0], t8[:, 1], s=50, color=new_cmap(0.89), marker=markers[8])
+    plt.scatter(t9[:, 0], t9[:, 1], s=50, color=new_cmap(1.00), marker=markers[9])
+    
+    plt.subplot(2,3,4)
+    plt.title(f"predicted train")
+    plt.scatter(t0[:, 0], t0[:, 1], s=50, color=new_cmap(0.11*t0[:,2]+0.01), marker=markers[0])
+    plt.scatter(t1[:, 0], t1[:, 1], s=50, color=new_cmap(0.11*t1[:,2]+0.01), marker=markers[1])
+    plt.scatter(t2[:, 0], t2[:, 1], s=50, color=new_cmap(0.11*t2[:,2]+0.01), marker=markers[2])
+    plt.scatter(t3[:, 0], t3[:, 1], s=50, color=new_cmap(0.11*t3[:,2]+0.01), marker=markers[3])
+    plt.scatter(t4[:, 0], t4[:, 1], s=50, color=new_cmap(0.11*t4[:,2]+0.01), marker=markers[4])
+    plt.scatter(t5[:, 0], t5[:, 1], s=50, color=new_cmap(0.11*t5[:,2]+0.01), marker=markers[5])
+    plt.scatter(t6[:, 0], t6[:, 1], s=50, color=new_cmap(0.11*t6[:,2]+0.01), marker=markers[6])
+    plt.scatter(t7[:, 0], t7[:, 1], s=50, color=new_cmap(0.11*t7[:,2]+0.01), marker=markers[7])
+    plt.scatter(t8[:, 0], t8[:, 1], s=50, color=new_cmap(0.11*t8[:,2]+0.01), marker=markers[8])
+    plt.scatter(t9[:, 0], t9[:, 1], s=50, color=new_cmap(0.11*t9[:,2]+0.01), marker=markers[9])
+    
+    #test set
+    v0, v1, v2, v3, v4, v5, v6, v7, v8, v9 = [],[],[],[],[],[],[],[],[],[]
+    for i in range(len(test_embedding)):
+        if TEST_TARGET[i]==0:
+            v0.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==1:
+            v1.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==2:
+            v2.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==3:
+            v3.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==4:
+            v4.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==5:
+            v5.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==6:
+            v6.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==7:
+            v7.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==8:
+            v8.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+        if TEST_TARGET[i]==9:
+            v9.append([test_embedding[i,0], test_embedding[i,1],TEST_PRED[i],TEST_TARGET[i]])
+    
+    v0, v1, v2, v3, v4, v5, v6, v7, v8, v9 = np.array(v0), np.array(v1), np.array(v2), np.array(v3), np.array(v4), np.array(v5), np.array(v6), np.array(v7), np.array(v8), np.array(v9)
+    
+    plt.subplot(2,3,2)
+    plt.title(f"actual test")
+    plt.scatter(v0[:, 0], v0[:, 1], s=50, color=new_cmap(0.01), marker=markers[0])
+    plt.scatter(v1[:, 0], v1[:, 1], s=50, color=new_cmap(0.12), marker=markers[1])
+    plt.scatter(v2[:, 0], v2[:, 1], s=50, color=new_cmap(0.23), marker=markers[2])
+    plt.scatter(v3[:, 0], v3[:, 1], s=50, color=new_cmap(0.34), marker=markers[3])
+    plt.scatter(v4[:, 0], v4[:, 1], s=50, color=new_cmap(0.45), marker=markers[4])
+    plt.scatter(v5[:, 0], v5[:, 1], s=50, color=new_cmap(0.56), marker=markers[5])
+    plt.scatter(v6[:, 0], v6[:, 1], s=50, color=new_cmap(0.67), marker=markers[6])
+    plt.scatter(v7[:, 0], v7[:, 1], s=50, color=new_cmap(0.78), marker=markers[7])
+    plt.scatter(v8[:, 0], v8[:, 1], s=50, color=new_cmap(0.89), marker=markers[8])
+    plt.scatter(v9[:, 0], v9[:, 1], s=50, color=new_cmap(1.00), marker=markers[9])
+
+    plt.subplot(2,3,5)
+    plt.title(f"predicted test")
+    plt.scatter(v0[:, 0], v0[:, 1], s=50, color=new_cmap(0.11*v0[:,2]+0.01), marker=markers[0])
+    plt.scatter(v1[:, 0], v1[:, 1], s=50, color=new_cmap(0.11*v1[:,2]+0.01), marker=markers[1])
+    plt.scatter(v2[:, 0], v2[:, 1], s=50, color=new_cmap(0.11*v2[:,2]+0.01), marker=markers[2])
+    plt.scatter(v3[:, 0], v3[:, 1], s=50, color=new_cmap(0.11*v3[:,2]+0.01), marker=markers[3])
+    plt.scatter(v4[:, 0], v4[:, 1], s=50, color=new_cmap(0.11*v4[:,2]+0.01), marker=markers[4])
+    plt.scatter(v5[:, 0], v5[:, 1], s=50, color=new_cmap(0.11*v5[:,2]+0.01), marker=markers[5])
+    plt.scatter(v6[:, 0], v6[:, 1], s=50, color=new_cmap(0.11*v6[:,2]+0.01), marker=markers[6])
+    plt.scatter(v7[:, 0], v7[:, 1], s=50, color=new_cmap(0.11*v7[:,2]+0.01), marker=markers[7])
+    plt.scatter(v8[:, 0], v8[:, 1], s=50, color=new_cmap(0.11*v8[:,2]+0.01), marker=markers[8])
+    plt.scatter(v9[:, 0], v9[:, 1], s=50, color=new_cmap(0.11*v9[:,2]+0.01), marker=markers[9])
+
+
+    #legenda
+    ax = plt.subplot(2,3,3)
+    legend_colors = []
+    for j in range(len(classes)):
+        legend_colors.append(Line2D([0],[0],marker=markers[j],color='w',label=classes[j],
+                markerfacecolor=new_cmap(j/9),markersize=10))
+    ax.legend(handles=legend_colors, loc='center')
+    ax.yaxis.set_major_locator(plt.NullLocator())
+    ax.xaxis.set_major_locator(plt.NullLocator())
+
+    plt.subplot(2,3,6)
+    plt.title(f"accuracy")
+    plt.plot(*zip(*VIS_ACC), label='train set')
+    plt.plot(*zip(*VIS_TEST), label='test set')
+    # plt.plot(*zip(*VIS_LOSS), label='loss train set')
+    plt.legend(loc='lower right')
+    
+    plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
+    
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+    
     plt.show()
 
 # =============================================================================
