@@ -18,7 +18,7 @@ import numpy as np;
 import math
 import datetime
 import os
-#import cv2
+# import cv2
 
 # =============================================================================
 # TODO:
@@ -465,24 +465,23 @@ def make_vis(epochs_passed):
     
     plt.show()
 
-# =============================================================================
-# def make_video():
-#     # Uncomment for manual test output_dir = "output/testimages"; # "output/2019-05-28 11.11.28";
-#     images = []
-#     for filename in os.listdir(output_dir):
-#         img = cv2.imread(output_dir + "/" + filename)
-#         height, width, layers = img.shape
-#         size = (width,height)
-#         images.append(img)
-#     fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-#     video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
-#     fps = 20
-#     out = cv2.VideoWriter(video_dir, fourcc, fps, size)
-#     for i in range(len(images)):
-#         print(f"written image {i}")
-#         out.write(images[i])
-#     out.release()
-# =============================================================================
+def make_video():
+    # Uncomment libe below for manual test
+    output_dir = "output/2019-06-14 23.19.29";
+    images = []
+    for filename in os.listdir(output_dir):
+        img = cv2.imread(output_dir + "/" + filename)
+        height, width, layers = img.shape
+        size = (width,height)
+        images.append(img)
+    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+    video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
+    fps = 0.5
+    out = cv2.VideoWriter(video_dir, fourcc, fps, size)
+    for i in range(len(images)):
+        print(f"written image {i}")
+        out.write(images[i])
+    out.release()
 
 if __name__ == '__main__':
     show_images();
