@@ -10,38 +10,39 @@ import random
 from PIL import Image
 import matplotlib.pyplot as plt
 
-folders = ["bear (animal)", "car (sedan)", "cloud", "panda", "pigeon", "seagull", "sheep", "suv", "teddy-bear", "van"]
+#folders = ["bear (animal)", "car (sedan)", "cloud", "panda", "pigeon", "seagull", "sheep", "suv", "teddy-bear", "van"]
+folders = ["airplane","alarm clock","angel","ant","apple","banana","basket","bed","bell","calculator"]
 for folder in folders:
-    folder_path = os.path.join('data/train_sub_2', folder)
+    folder_path = os.path.join('data/train_diff_trans', folder)
     
     # find all files paths from the folder
     images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
 
     for image in images:
-        print(image)
+        #print(image)
         
         #normal image
         img = Image.open(image)
-        plt.imshow(img)
-        plt.show()
+        #plt.imshow(img)
+        #plt.show()
         
         #flipped image
         flipped_img = img.transpose(Image.FLIP_LEFT_RIGHT)
-        plt.imshow(flipped_img)
-        plt.show()
+        #plt.imshow(flipped_img)
+        #plt.show()
         
         #rotated image
         k = random.choice([int(random.uniform(-20.5,-3.5)),int(random.uniform(3.5,20.5))])
         rotated_img = img.rotate(k, fillcolor="white")
-        plt.imshow(rotated_img)
-        plt.show()    
+        #plt.imshow(rotated_img)
+        #plt.show()    
         
         #shifted image
         l = random.choice([random.uniform(-100,-20),random.uniform(20,100)])
         m = random.choice([random.uniform(-100,-20),random.uniform(20,100)]) 
         shifted_img = img.rotate(0, translate=(l,m), fillcolor="white")
-        plt.imshow(shifted_img)
-        plt.show()  
+        #plt.imshow(shifted_img)
+        #plt.show()  
         
         #scaled image
         n = int(random.choice([random.uniform(0.75,0.9),random.uniform(1.1,1.25)])*img.width)
@@ -61,8 +62,8 @@ for folder in folders:
                 padd_2 = padd_1+1
             scaled_img_2 = Image.new(scaled_img.mode, (img.width,img.height), (255))
             scaled_img_2.paste(scaled_img, box=(padd_1,padd_2))
-        plt.imshow(scaled_img_2)
-        plt.show()
+        #plt.imshow(scaled_img_2)
+        #plt.show()
         
         file, ext = os.path.splitext(image)
         flipped_img.save(file + "_flipped.png", "PNG")
