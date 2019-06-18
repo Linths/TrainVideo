@@ -24,10 +24,11 @@ from torch.nn import *
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision import datasets
+import matplotlib.gridspec as gridspec
 
 class Visualization():
     alpha = 0.6
-    colours = [[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 1, 1], [0.5, 0.2, 0.9], [0.2, 0.5, 0.5], [1, 0.5, 0]]
+    colours = [[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 1, 1], [0.6, 0.3, 1], [0.4, 1, 0.9], [1, 0.5, 0]]
     # blue, red, green, pink, cyan, yellow, white, violet, teal, orange
     # Class instances below will be initalized in init function
     newcmp = None
@@ -46,13 +47,12 @@ class Visualization():
         colours_long = copy.deepcopy(Visualization.colours)
         for col in colours_long:
             col.append(1)
-        viridis = cm.get_cmap('viridis',256)
-        colourmap = viridis(np.linspace(0,1,256))
-        #colourmap[:25,:] = colours_long[0]
-        for i in range(len(colours_long)):
-            colourmap[int(i*256/10):int((i+1)*256/10),:] = colours_long[i]
-        Visualization.newcmp = ListedColormap(colourmap)
+        Visualization.newcmp = ListedColormap(colours_long)
+        
+        
         Visualization.plot_image = []
+        self.VIS_ACC.append((0,0))
+        self.TEST_ACC.append((0,0))
 
     def make_vis(self, output_dir, epochs_passed):
         sns.set(style='white', rc={'figure.figsize':(10,8)})
@@ -209,37 +209,58 @@ class Visualization():
         def getImage(image):
             return OffsetImage(image)
 
-        sns.set(style='white', rc={'figure.figsize':(10,8)})
+        #sns.set(style='white', rc={'figure.figsize':(10,8)})
         
         fit = umap.UMAP(random_state=42, n_neighbors=n_neigh)
         standard_embedding = fit.fit_transform(self.TEST_DATA)
         train_embedding = fit.fit_transform(self.VIS_DATA)
-        
         x = standard_embedding[:,0]
         y = standard_embedding[:,1]
-        ax = plt.subplot(121)
+        
+        # set up figure
+        fig = plt.figure(1)
+        big_x = gridspec.GridSpec(3,3)
+        big_x.update(wspace=0.3, hspace=0.5)
+        
+        # big plot (test data)
+        ax = plt.subplot(big_x[:,:-1])
         ax.title.set_text("test data")
         ax.scatter(x, y)
         for x0, y0, img in zip(x, y, Visualization.plot_image):
-            ab = AnnotationBbox(getImage(resize(img, (20,20), anti_aliasing=True, mode='constant')), (x0, y0), frameon=False)
+            ab = AnnotationBbox(getImage(img), (x0, y0), frameon=False)
             ax.add_artist(ab)
         
-        ax2 = plt.subplot(222)
+        # sub plot 1 (legend)
+        ax3 = plt.subplot(big_x[0,-1])
+        legend_colors = []
+        for j in range(len(self.classes)):
+            legend_colors.append(Line2D([0], [0], marker='o', color='w', label=self.classes[j],
+                    markerfacecolor=Visualization.colours[j], markersize=10))
+        ax3.legend(handles=legend_colors, loc='center', ncol=2)
+        ax3.yaxis.set_major_locator(plt.NullLocator())
+        ax3.xaxis.set_major_locator(plt.NullLocator())
+        ax3.set_title('legend')
+        
+        # sub plot 2 (train data)
+        ax2 = plt.subplot(big_x[1,-1])
         ax2.title.set_text("train actual")
         scat = ax2.scatter(train_embedding[:,0], train_embedding[:,1], c=self.VIS_TARGET, s=1, cmap=Visualization.newcmp)
         #legend1 = ax2.legend(*scat.legend_elements(),loc="lower left", title="Classes")
         #ax2.add_artist(legend1)
         
-        plt.subplot(224)
-        plt.title(f"accuracy")
-        plt.plot(*zip(*self.VIS_ACC), label='train set')
-        plt.plot(*zip(*self.TEST_ACC), label='test set')
-        plt.legend(loc='lower right')
+        # sub plot 3 (accuracy)
+        ax4 = plt.subplot(big_x[-1,-1])
+        ax4.set_title("accuracy")
+        ax4.plot(*zip(*self.VIS_ACC), label='train set')
+        ax4.plot(*zip(*self.TEST_ACC), label='test set')
+        ax4.legend(loc='lower right')
         
+        # general info
+        fig.set_size_inches(w=14, h=8)
         plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
-        plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+        fig.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
 
         if print_every_vis:
             plt.show()
@@ -259,7 +280,10 @@ class Visualization():
         img_hsv[...,0]=color_mask_hsv[...,0]
         img_hsv[...,1]=color_mask_hsv[...,1]*Visualization.alpha
         img_masked = color.hsv2rgb(img_hsv)
-        Visualization.plot_image.append(img_masked)
+        img_small = resize(img_masked, (20,20), anti_aliasing=True, mode='constant')
+        img_small.clip(min=0, out=img_small)
+        # img_small[0][0][0]=value
+        Visualization.plot_image.append(img_small)
 
     def clear_after_epoch(self):
         self.VIS_DATA.clear()

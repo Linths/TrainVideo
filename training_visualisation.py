@@ -1,20 +1,16 @@
 from const import *
 import cnn
-import video
+#import video
 import vis
 
 import datetime
 
 # =============================================================================
 # TODO:
-#     - data punten vervangen door plaatjes (achtergrondkleur = class)
 #     - andere lagen visualiseren
-#     - video opties aanpassen
-#     - (draaien op cluster)
 #     - Fitten op ALLE data, dan pas per frame visualizeren
 #     - Per batch visualizeren
 #     - Seed van UMAP hetzelfde?
-#     - Learning rate omlaag voor meer epochs
 #     - Batch normalization
 # 
 # =============================================================================
@@ -32,4 +28,4 @@ if __name__ == '__main__':
     # vis.plot_results(losses, accuracies)
     # Load a model instead: m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
     cnn.test_model(m)
-    video.make(output_dir)
+    #video.make(output_dir)
