@@ -2,12 +2,12 @@
 from const import *
 from vis import Visualization
 
-import torch;
-import torch.nn as nn;
-from torch.nn import *;
-from torch.utils.data import DataLoader;
-import torchvision.transforms as transforms;
-from torchvision import datasets;
+import torch
+import torch.nn as nn
+from torch.nn import *
+from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
+from torchvision import datasets
 import math
 import os
 
@@ -134,15 +134,21 @@ def train_model(model, output_dir):
         
         # Add (0,0) point for the test accuracy graph
         if epoch == 0:
-            _, _, _, test_acc = test_model(model)
+            _, _, _, test_acc, _ = test_model(model)
             visu.TEST_ACC.append((epoch+1, test_acc))
 
         visu.VIS_ACC.append((epoch+1, total_correct/total_totals))
         
         if (epoch + 1) % show_after_epochs == 0:
-            visu.TEST_DATA, visu.TEST_TARGET, visu.TEST_PRED, test_acc = test_model(model)
+            visu.TEST_DATA, visu.TEST_TARGET, visu.TEST_PRED, test_acc, images_prediction = test_model(model)
             visu.TEST_ACC.append((epoch+1, test_acc))
-            visu.make_vis(output_dir, epoch+1)
+            # print(images_prediction)
+            for image, pred in images_prediction:
+                # print(image)
+                # print(pred)
+                visu.add_class_colour(image, pred)
+            # visu.make_vis(output_dir, epoch+1)
+            visu.make_label_vis(output_dir, epoch+1)
         
         visu.clear_after_epoch()
     return classes, train_loader, loss_list, acc_list
@@ -170,6 +176,7 @@ def test_model(model):
     with torch.no_grad():
         correct = 0
         total = 0
+        images_prediction = []
 
         # Per batch
         for images, labels in test_loader:
@@ -181,9 +188,11 @@ def test_model(model):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
+            images_prediction.extend(zip(images, predicted))
+
         accuracy = correct / total
         print('Test accuracy of the model on the test images: {} %'.format(accuracy * 100))
     
     # Save the model and plot
     torch.save(model.state_dict(), model_dir + 'conv_net_model.ckpt')
-    return test_vis_data, test_vis_actual, test_vis_pred, accuracy
+    return test_vis_data, test_vis_actual, test_vis_pred, accuracy, images_prediction

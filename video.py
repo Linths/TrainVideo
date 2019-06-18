@@ -15,7 +15,7 @@ def make(output_dir):
             images.append(img)
     fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     video_dir = f"{output_dir}/total {num_epochs} passed (#c={num_classes}, bs={batch_size}, lr={learning_rate}).avi"
-    fps = 0.5
+    fps = 0.25
     out = cv2.VideoWriter(video_dir, fourcc, fps, size)
     for i in range(len(images)):
         print(f"written image {i}")

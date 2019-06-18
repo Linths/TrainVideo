@@ -11,8 +11,28 @@ from bokeh.models import LinearAxis, Range1d
 import torchvision
 import numpy as np;
 import os
+from skimage import data, color, io, img_as_float
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+import copy
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from skimage.transform import resize
+from skimage import data, color, io, img_as_float
+import torch
+import torch.nn as nn
+from torch.nn import *
+from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
+from torchvision import datasets
 
 class Visualization():
+    alpha = 0.6
+    colours = [[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 1, 1], [0.5, 0.2, 0.9], [0.2, 0.5, 0.5], [1, 0.5, 0]]
+    # blue, red, green, pink, cyan, yellow, white, violet, teal, orange
+    # Class instances below will be initalized in init function
+    newcmp = None
+    plot_image = []
+
     def __init__(self, classes, VIS_DATA=[], VIS_TARGET=[], VIS_PRED=[], TEST_DATA=[], TEST_TARGET=[], TEST_PRED=[], VIS_ACC=[], TEST_ACC=[]):
         self.classes = classes
         self.VIS_DATA = VIS_DATA
@@ -23,6 +43,16 @@ class Visualization():
         self.TEST_PRED = TEST_PRED
         self.VIS_ACC = VIS_ACC
         self.TEST_ACC = TEST_ACC
+        colours_long = copy.deepcopy(Visualization.colours)
+        for col in colours_long:
+            col.append(1)
+        viridis = cm.get_cmap('viridis',256)
+        colourmap = viridis(np.linspace(0,1,256))
+        #colourmap[:25,:] = colours_long[0]
+        for i in range(len(colours_long)):
+            colourmap[int(i*256/10):int((i+1)*256/10),:] = colours_long[i]
+        Visualization.newcmp = ListedColormap(colourmap)
+        Visualization.plot_image = []
 
     def make_vis(self, output_dir, epochs_passed):
         sns.set(style='white', rc={'figure.figsize':(10,8)})
@@ -30,7 +60,7 @@ class Visualization():
         new_cmap = colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=0.0, b=0.9), cmap(np.linspace(0.0,0.9,10)))
         
         markers = ['$0$','$1$','$2$','$3$','$4$','$5$','$6$','$7$','$8$','$9$']
-        fit = umap.UMAP(random_state=42, n_neighbors=3) # 25)
+        fit = umap.UMAP(random_state=42, n_neighbors=n_neigh)
         standard_embedding = fit.fit_transform(self.VIS_DATA)
         test_embedding = fit.fit_transform(self.TEST_DATA)
         
@@ -174,6 +204,63 @@ class Visualization():
             plt.cla()
             plt.close()
 
+    def make_label_vis(self, output_dir, epochs_passed):
+        #make test vis with images
+        def getImage(image):
+            return OffsetImage(image)
+
+        sns.set(style='white', rc={'figure.figsize':(10,8)})
+        
+        fit = umap.UMAP(random_state=42, n_neighbors=n_neigh)
+        standard_embedding = fit.fit_transform(self.TEST_DATA)
+        train_embedding = fit.fit_transform(self.VIS_DATA)
+        
+        x = standard_embedding[:,0]
+        y = standard_embedding[:,1]
+        ax = plt.subplot(121)
+        ax.title.set_text("test data")
+        ax.scatter(x, y)
+        for x0, y0, img in zip(x, y, Visualization.plot_image):
+            ab = AnnotationBbox(getImage(resize(img, (20,20), anti_aliasing=True, mode='constant')), (x0, y0), frameon=False)
+            ax.add_artist(ab)
+        
+        ax2 = plt.subplot(222)
+        ax2.title.set_text("train actual")
+        scat = ax2.scatter(train_embedding[:,0], train_embedding[:,1], c=self.VIS_TARGET, s=1, cmap=Visualization.newcmp)
+        #legend1 = ax2.legend(*scat.legend_elements(),loc="lower left", title="Classes")
+        #ax2.add_artist(legend1)
+        
+        plt.subplot(224)
+        plt.title(f"accuracy")
+        plt.plot(*zip(*self.VIS_ACC), label='train set')
+        plt.plot(*zip(*self.TEST_ACC), label='test set')
+        plt.legend(loc='lower right')
+        
+        plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+
+        if print_every_vis:
+            plt.show()
+        else:
+            plt.clf()
+            plt.cla()
+            plt.close()
+
+    def add_class_colour(self, image, label):
+        img = img_as_float(image)[0]
+        rows, cols = img.shape
+        color_mask = np.zeros((rows, cols, 3))
+        color_mask[0:rows,0:cols] = Visualization.colours[label]
+        img_color = np.dstack((img,img,img))
+        img_hsv = color.rgb2hsv(img_color)
+        color_mask_hsv = color.rgb2hsv(color_mask)
+        img_hsv[...,0]=color_mask_hsv[...,0]
+        img_hsv[...,1]=color_mask_hsv[...,1]*Visualization.alpha
+        img_masked = color.hsv2rgb(img_hsv)
+        Visualization.plot_image.append(img_masked)
+
     def clear_after_epoch(self):
         self.VIS_DATA.clear()
         self.VIS_TARGET.clear()
@@ -181,6 +268,7 @@ class Visualization():
         self.TEST_DATA.clear()
         self.TEST_TARGET.clear()
         self.TEST_PRED.clear()
+        Visualization.plot_image.clear()
 
 # Show random images
 def show_images(train_loader, classes):
