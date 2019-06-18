@@ -24,7 +24,7 @@ if __name__ == '__main__':
     print("Hello and welcome to the CNN training visualizer.")
     start_time = datetime.datetime.now();
     output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')}"
-    print(f"Started {start_time}")
+    print(f"Started {start_time}\n")
 
     m = cnn.ConvNet()
     classes, train_loader, losses, accuracies = cnn.train_model(m, output_dir)

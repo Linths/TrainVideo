@@ -167,7 +167,12 @@ class Visualization():
 
         plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
         
-        plt.show()
+        if print_every_vis:
+            plt.show()
+        else:
+            plt.clf()
+            plt.cla()
+            plt.close()
 
     def clear_after_epoch(self):
         self.VIS_DATA.clear()

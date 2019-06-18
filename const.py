@@ -1,12 +1,12 @@
 # Hyperparameters, general NN settings
-num_epochs = 3
+num_epochs = 25
 num_classes = 10
 batch_size = 50
 learning_rate = 0.0005
 
 # Data access
-train_dir =  r"./data/train_small"
-test_dir =  r"./data/test_small"
+train_dir =  r"./data/train_diff"
+test_dir =  r"./data/test_diff"
 model_dir = r"./model"
 
 # NN scaling params
@@ -15,3 +15,4 @@ no_dimens = 100    # Number of dimensions that will be reduced by UMAP to 2. Siz
 
 # Visualization
 show_after_epochs = 1
+print_every_vis = False
