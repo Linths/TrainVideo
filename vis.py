@@ -27,7 +27,7 @@ from torchvision import datasets
 
 class Visualization():
     alpha = 0.6
-    colours = [[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 1, 1], [0.6, 0.3, 1], [0.4, 1, 0.9], [1, 0.5, 0]]
+    colours = [[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 0.9, 0.9], [0.6, 0.3, 1], [0.4, 1, 0.9], [1, 0.5, 0]]
     # blue, red, green, pink, cyan, yellow, white, violet, teal, orange
     # Class instances below will be initalized in init function
     newcmp = None
@@ -207,52 +207,51 @@ class Visualization():
         #make test vis with images
         def getImage(image):
             return OffsetImage(image)
-
-        #sns.set(style='white', rc={'figure.figsize':(10,8)})
         
+        #setup umap dimensionality reduction
         fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
-        standard_embedding = fit.fit_transform(self.TEST_DATA)
-        train_embedding = fit.fit_transform(self.VIS_DATA)
-        x = standard_embedding[:,0]
-        y = standard_embedding[:,1]
+        all_data = np.concatenate((self.VIS_DATA, self.TEST_DATA), axis=0)
+        trans = fit.fit(all_data)
+        train_emb = trans.transform(self.VIS_DATA)
+        test_emb = trans.transform(self.TEST_DATA)
+        x = test_emb[:,0]
+        y = test_emb[:,1]
+        train_x = train_emb[:,0]
+        train_y = train_emb[:,1]
         
         # set up figure
         fig = plt.figure(1)
-        big_x = gridspec.GridSpec(3,3)
+        big_x = gridspec.GridSpec(2,4)
         big_x.update(wspace=0.3, hspace=0.5)
-        
+
         # big plot (test data)
-        ax = plt.subplot(big_x[:,:-1])
+        ax = plt.subplot(big_x[:,:3])
         ax.title.set_text("test data")
-        ax.scatter(x, y)
+        ax.scatter(x, y, c=self.TEST_PRED, s=1, cmap=Visualization.newcmp)
+        plt.setp(ax, xticks=[], yticks=[])
         for x0, y0, img in zip(x, y, Visualization.plot_image):
             ab = AnnotationBbox(getImage(img), (x0, y0), frameon=False)
             ax.add_artist(ab)
-        
-        # sub plot 1 (legend)
-        ax3 = plt.subplot(big_x[0,-1])
-        legend_colors = []
-        for j in range(len(self.classes)):
-            legend_colors.append(Line2D([0], [0], marker='o', color='w', label=self.classes[j],
-                    markerfacecolor=Visualization.colours[j], markersize=10))
-        ax3.legend(handles=legend_colors, loc='center', ncol=2)
-        ax3.yaxis.set_major_locator(plt.NullLocator())
-        ax3.xaxis.set_major_locator(plt.NullLocator())
-        ax3.set_title('legend')
-        
+        sm = plt.cm.ScalarMappable(cmap=Visualization.newcmp)
+        sm._A = []
+        cb = plt.colorbar(sm)
+        cb.set_ticks(np.arange(0.05,1.05,step=0.1))
+        cb.set_ticklabels(self.classes)
+
         # sub plot 2 (train data)
-        ax2 = plt.subplot(big_x[1,-1])
-        ax2.title.set_text("train actual")
-        scat = ax2.scatter(train_embedding[:,0], train_embedding[:,1], c=self.VIS_TARGET, s=1, cmap=Visualization.newcmp)
-        #legend1 = ax2.legend(*scat.legend_elements(),loc="lower left", title="Classes")
-        #ax2.add_artist(legend1)
+        ax2 = plt.subplot(big_x[0,3])
+        ax2.title.set_text("train predicted")
+        ax2.scatter(train_x, train_y, c=self.VIS_PRED, s=1, cmap=Visualization.newcmp)
+        plt.setp(ax2, xticks=[], yticks=[])
         
         # sub plot 3 (accuracy)
-        ax4 = plt.subplot(big_x[-1,-1])
+        ax4 = plt.subplot(big_x[1,3])
         ax4.set_title("accuracy")
         ax4.plot(*zip(*self.VIS_ACC), label='train set')
         ax4.plot(*zip(*self.TEST_ACC), label='test set')
         ax4.legend(loc='lower right')
+        plt.xticks(np.arange(0,num_epochs+1,step=1))
+        plt.yticks(np.arange(0,1.1,step=0.1))
         
         # general info
         fig.set_size_inches(w=14, h=8)
