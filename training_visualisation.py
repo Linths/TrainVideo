@@ -8,9 +8,7 @@ import datetime
 # =============================================================================
 # TODO:
 #     - andere lagen visualiseren
-#     - Fitten op ALLE data, dan pas per frame visualizeren
 #     - Per batch visualizeren
-#     - Seed van UMAP hetzelfde?
 #     - Batch normalization
 # 
 # =============================================================================
