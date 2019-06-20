@@ -4,6 +4,8 @@ import cnn
 import vis
 
 import datetime
+import shutil
+import os
 
 # =============================================================================
 # TODO:
@@ -19,6 +21,9 @@ if __name__ == '__main__':
     start_time = datetime.datetime.now();
     output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')} {train_dir.split('/')[-1]} {test_dir.split('/')[-1]}"
     print(f"Started {start_time}\n")
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    shutil.copyfile("const.py", output_dir + "/parameters.py")
 
     m = cnn.ConvNet()
     classes, train_loader, losses, accuracies = cnn.train_model(m, output_dir)
@@ -26,4 +31,4 @@ if __name__ == '__main__':
     # vis.plot_results(losses, accuracies)
     # Load a model instead: m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
     cnn.test_model(m)
-    #video.make(output_dir)
+    # video.make(output_dir)
