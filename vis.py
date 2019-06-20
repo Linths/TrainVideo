@@ -3,6 +3,10 @@ from const import *
 import matplotlib.pyplot as plt;
 from matplotlib.lines import Line2D
 import matplotlib.colors as colors
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib.gridspec as gridspec
 import seaborn as sns
 import umap
 from bokeh.plotting import figure
@@ -11,11 +15,7 @@ from bokeh.models import LinearAxis, Range1d
 import torchvision
 import numpy as np;
 import os
-from skimage import data, color, io, img_as_float
-from matplotlib import cm
-from matplotlib.colors import ListedColormap
 import copy
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from skimage.transform import resize
 from skimage import data, color, io, img_as_float
 import torch
@@ -24,7 +24,6 @@ from torch.nn import *
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision import datasets
-import matplotlib.gridspec as gridspec
 
 class Visualization():
     alpha = 0.6
@@ -60,7 +59,7 @@ class Visualization():
         new_cmap = colors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=0.0, b=0.9), cmap(np.linspace(0.0,0.9,10)))
         
         markers = ['$0$','$1$','$2$','$3$','$4$','$5$','$6$','$7$','$8$','$9$']
-        fit = umap.UMAP(random_state=42, n_neighbors=n_neigh)
+        fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
         standard_embedding = fit.fit_transform(self.VIS_DATA)
         test_embedding = fit.fit_transform(self.TEST_DATA)
         
@@ -195,7 +194,7 @@ class Visualization():
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        plt.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+        plt.savefig(f"{output_dir}/after epoch {epochs_passed:02d} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
         
         if print_every_vis:
             plt.show()
@@ -211,7 +210,7 @@ class Visualization():
 
         #sns.set(style='white', rc={'figure.figsize':(10,8)})
         
-        fit = umap.UMAP(random_state=42, n_neighbors=n_neigh)
+        fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
         standard_embedding = fit.fit_transform(self.TEST_DATA)
         train_embedding = fit.fit_transform(self.VIS_DATA)
         x = standard_embedding[:,0]
@@ -260,7 +259,7 @@ class Visualization():
         plt.suptitle(f"Neuron activations of the sketches CNN after {epochs_passed} epochs")
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
-        fig.savefig(f"{output_dir}/after epoch {epochs_passed} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
+        fig.savefig(f"{output_dir}/after epoch {epochs_passed:02d} of {num_epochs} (#c={num_classes}, bs={batch_size}, lr={learning_rate}).png")
 
         if print_every_vis:
             plt.show()
@@ -297,18 +296,18 @@ class Visualization():
 # Show random images
 def show_images(train_loader, classes):
     # Get some random training images
-    dataiter = iter(train_loader);
-    images, labels = dataiter.next();
+    dataiter = iter(train_loader)
+    images, labels = dataiter.next()
     # Show images
-    imshow(torchvision.utils.make_grid(images));
+    imshow(torchvision.utils.make_grid(images))
     # Print labels
-    print(' '.join('%5s' % classes[labels[j]] for j in range(4)));
+    print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 def imshow(img):
     img = img / 2 + 0.5;    # Unnormalize
     npimg = img.numpy();
-    plt.imshow(np.transpose(npimg, (1,2,0)));
-    plt.show();
+    plt.imshow(np.transpose(npimg, (1,2,0)))
+    plt.show()
 
 def plot_results(loss_list, acc_list):
     p = figure(y_axis_label='Loss', width=850, y_range=(0, 1), title=f'Performance of sketches CNN [#classes = {num_classes}, batch size = {batch_size}, #epochs = {num_epochs}, learning rate = {learning_rate}]')
