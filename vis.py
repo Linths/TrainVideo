@@ -250,7 +250,7 @@ class Visualization():
         ax4.plot(*zip(*self.VIS_ACC), label='train set')
         ax4.plot(*zip(*self.TEST_ACC), label='test set')
         ax4.legend(loc='lower right')
-        plt.xticks(np.arange(0,num_epochs+1,step=1))
+        plt.xticks(np.arange(0,num_epochs+1,step=2))
         plt.yticks(np.arange(0,1.1,step=0.1))
         
         # general info

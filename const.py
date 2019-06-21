@@ -2,7 +2,7 @@
 num_epochs = 20
 num_classes = 10
 batch_size = 50
-learning_rate = 0.0005
+learning_rate = 0.00005
 
 # Data access
 train_dir =  r"./data/train_diff_trans"
