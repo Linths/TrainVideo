@@ -26,9 +26,10 @@ if __name__ == '__main__':
     shutil.copyfile("const.py", output_dir + "/parameters.py")
 
     m = cnn.ConvNet()
-    classes, train_loader, losses, accuracies = cnn.train_model(m, output_dir)
+    cnn.train_model(m, output_dir)
+    # classes, train_loader, losses, accuracies = cnn.train_model(m, output_dir)
     # vis.show_images(train_loader, classes)
     # vis.plot_results(losses, accuracies)
     # Load a model instead: m = torch.load(MODEL_STORE_PATH + 'conv_net_model.ckpt')
-    cnn.test_model(m)
+    # cnn.test_model(m)
     # video.make(output_dir)
