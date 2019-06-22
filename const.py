@@ -11,7 +11,7 @@ model_dir = r"./model"
 
 # NN scaling params
 image_width = 128       # Image width / height
-no_dimens = 100         # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
+no_dimens = 50          # Number of dimensions that will be reduced by UMAP to 2. Size of the 2nd fully connected layer.
 
 # Visualization
 show_after_epochs = 1
