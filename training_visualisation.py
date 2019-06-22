@@ -11,7 +11,6 @@ import os
 # TODO:
 #     - andere lagen visualiseren
 #     - Per batch visualizeren
-#     - Batch normalization
 # 
 # =============================================================================
 

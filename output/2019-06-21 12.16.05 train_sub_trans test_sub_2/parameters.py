@@ -1,5 +1,5 @@
 # Hyperparameters, general NN settings
-num_epochs = 20
+num_epochs = 12
 num_classes = 10
 batch_size = 50
 learning_rate = 0.00005
