@@ -44,15 +44,12 @@ class Visualization():
         self.TEST_PRED = TEST_PRED
         self.VIS_ACC = VIS_ACC
         self.TEST_ACC = TEST_ACC
+
         colours_long = copy.deepcopy(Visualization.colours)
         for col in colours_long:
             col.append(1)
         Visualization.newcmp = ListedColormap(colours_long)
-        colours_bar = copy.deepcopy(Visualization.colours)
-        for col in colours_bar:
-            col.append(Visualization.alpha)
-        Visualization.barcmp = ListedColormap(colours_bar)
-        
+
         Visualization.plot_image = []
         self.VIS_ACC.append((0,0))
         self.TEST_ACC.append((0,0))
@@ -61,7 +58,7 @@ class Visualization():
         #make test vis with images
         def getImage(image):
             return OffsetImage(image)
-        
+
         #setup umap dimensionality reduction
         fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
         all_data = np.concatenate((self.VIS_DATA, self.TEST_DATA), axis=0)
@@ -72,7 +69,7 @@ class Visualization():
         y = test_emb[:,1]
         train_x = train_emb[:,0]
         train_y = train_emb[:,1]
-        
+
         # set up figure
         fig = plt.figure(1)
         big_x = gridspec.GridSpec(2,4)
@@ -99,7 +96,7 @@ class Visualization():
         ax2.title.set_text("Images for training")
         ax2.scatter(train_x, train_y, c=self.VIS_PRED, s=1, cmap=Visualization.newcmp)
         plt.setp(ax2, xticks=[], yticks=[])
-        
+
         # sub plot 3 (accuracy)
         ax4 = plt.subplot(big_x[1,3])
         ax4.title.set_text("Accuracy of the neural network")
@@ -108,7 +105,7 @@ class Visualization():
         ax4.legend(loc='lower right')
         plt.xticks(np.arange(0,num_epochs+1,step=2))
         plt.yticks(np.arange(0,1.1,step=0.1))
-        
+
         # general info
         fig.set_size_inches(w=28, h=16)
         plt.suptitle(f"The neural network's activaty when given sketch images, after training for {epochs_passed} epochs", fontsize=18)
@@ -149,7 +146,7 @@ class Visualization():
         self.TEST_PRED.clear()
         Visualization.plot_image.clear()
 
-# Show random images
+# Show random images of the train set
 def show_images(train_loader, classes):
     # Get some random training images
     dataiter = iter(train_loader)
@@ -159,12 +156,14 @@ def show_images(train_loader, classes):
     # Print labels
     print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
+# Show an image
 def imshow(img):
     img = img / 2 + 0.5;    # Unnormalize
     npimg = img.numpy();
     plt.imshow(np.transpose(npimg, (1,2,0)))
     plt.show()
 
+# Make a plot of the train accuracy
 def plot_results(loss_list, acc_list):
     p = figure(y_axis_label='Loss', width=850, y_range=(0, 1), title=f'Performance of sketches CNN [#classes = {num_classes}, batch size = {batch_size}, #epochs = {num_epochs}, learning rate = {learning_rate}]')
     p.extra_y_ranges = {'Accuracy': Range1d(start=0, end=100)}

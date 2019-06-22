@@ -7,7 +7,7 @@ def make(output_dir):
     print(output_dir)
     images = []
     for filename in os.listdir(output_dir):
-        if not (filename.endswith(".avi")):
+        if (filename.endswith(".png")):
             print(filename)
             img = cv2.imread(output_dir + "/" + filename)
             height, width, layers = img.shape
@@ -18,7 +18,6 @@ def make(output_dir):
     fps = 0.25
     out = cv2.VideoWriter(video_dir, fourcc, fps, size)
     for i in range(len(images)):
-        print(f"written image {i}")
         out.write(images[i])
     out.release()
 
