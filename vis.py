@@ -24,6 +24,9 @@ from torch.nn import *
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision import datasets
+import pickle
+import datetime
+import shutil
 
 class Visualization():
     alpha = 0.6
@@ -63,6 +66,8 @@ class Visualization():
         self.TEST_ACC.append((0,0))
 
     def make_label_vis(self, output_dir, epochs_passed):
+        self.write_to_file(output_dir)
+        
         # make a visualisation of the neural network's training process with 3 subplots.
         # 1. a visualisation of the test data with images as plot points and a colorbar as legend
         # 2. a visualisation of the training data
@@ -159,6 +164,20 @@ class Visualization():
         self.TEST_PRED.clear()
         Visualization.plot_image.clear()
 
+    def write_to_file(self, output_dir):
+        # Read in current array of visualizations or create empty array
+        vis_array = []
+        if os.path.exists(output_dir + "/vis_data.bin"):
+            file = open(output_dir + "/vis_data.bin", 'rb')
+            vis_array = pickle.load(file)
+            file.close()
+        # Add self, write to file
+        vis_array.append(self)
+        with open(output_dir + '/vis_data.bin', 'wb') as file:
+            pickle.dump(vis_array, file)
+            file.close()
+        
+
 def show_images(train_loader, classes):
     # get some random images of the train set, show them and print first four labels
     dataiter = iter(train_loader)
@@ -181,3 +200,28 @@ def plot_results(loss_list, acc_list):
     p.line(np.arange(len(loss_list)), loss_list)
     p.line(np.arange(len(loss_list)), np.array(acc_list) * 100, y_range_name='Accuracy', color='red')
     show(p)
+
+def revisualize(output_dir):
+    start_time = datetime.datetime.now()
+    trainset = output_dir.split(' ')[-2]
+    testset = output_dir.split(' ')[-1]
+    new_output_dir = f"output/{start_time.strftime('%Y-%m-%d %H.%M.%S')} {trainset} {testset}"
+    
+    # Copy the settings
+    if not os.path.exists(new_output_dir):
+        os.mkdir(new_output_dir)
+    shutil.copyfile(output_dir + "/parameters.py", new_output_dir + "/parameters.py")
+
+    # Read in the visualization objects
+    file = open(output_dir + "/vis_data.bin", 'rb')
+    vis_array = pickle.load(file)
+    for i in range(0, len(vis_array)):
+        vis_array[i].make_label_vis(new_output_dir, i+1)
+
+def revisualize_from_last():
+    all_outputs = [folder for folder in  os.listdir("output") if folder.startswith('2019')]
+    all_outputs.sort()
+    return revisualize("output/" + all_outputs[-1])
+
+if __name__ == '__main__':
+    revisualize_from_last()
