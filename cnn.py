@@ -143,10 +143,10 @@ def train_model(model, output_dir):
             visu.TEST_DATA, visu.TEST_TARGET, visu.TEST_PRED, test_acc, images_prediction = test_model(model)
             visu.TEST_ACC.append((epoch+1, test_acc))
             # print(images_prediction)
-            for image, pred in images_prediction:
+            for image, pred, label in images_prediction:
                 # print(image)
                 # print(pred)
-                visu.add_class_colour(image, pred)
+                visu.add_class_colour(image, pred, label)
             # visu.make_vis(output_dir, epoch+1)
             visu.make_label_vis(output_dir, epoch+1)
         
@@ -188,7 +188,7 @@ def test_model(model):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            images_prediction.extend(zip(images, predicted))
+            images_prediction.extend(zip(images, predicted, labels))
 
         accuracy = correct / total
         print('Test accuracy of the model on the test images: {} %'.format(accuracy * 100))
