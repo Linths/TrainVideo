@@ -116,7 +116,7 @@ class Visualization():
 
         # set up figure information
         fig.set_size_inches(w=28, h=16)
-        plt.suptitle(f"The neural network's activaty when given sketch images, after training for {epochs_passed} epochs", fontsize=18)
+        plt.suptitle(f"The neural network's activity when given sketch images, after training for {epochs_passed} epochs", fontsize=18)
         plt.figtext(.5,.95,"Activations of all 100 neurons in the CNN's first fully connected layer, reduced to 2 dimensions using UMAP", fontsize=14, ha='center')
         
         # set up output information
