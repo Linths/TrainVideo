@@ -55,7 +55,7 @@ class Visualization():
         Visualization.newcmp = ListedColormap(colours_long)
         colours_alpha = copy.deepcopy(Visualization.colours)
         for col in colours_alpha:
-            col.append((1+alpha)/2)
+            col.append((1+Visualization.alpha)/2)
         Visualization.barcmp = ListedColormap(colours_alpha)
 
         # start the accuracy plots at (0,0)
