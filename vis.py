@@ -113,9 +113,10 @@ class Visualization():
         ax4.set_title("Accuracy of the neural network", fontsize=24)
         ax4.plot(*zip(*self.VIS_ACC), label='train set')
         ax4.plot(*zip(*self.TEST_ACC), label='test set')
-        ax4.legend(loc='lower right')
+        ax4.legend(loc='lower right', fontsize=24)
         plt.xticks(np.arange(0,num_epochs+1,step=2))
-        plt.yticks(np.arange(0,1.1,step=0.1))
+        plt.yticks(np.arange(0,1.2,step=0.2))
+        ax4.tick_params(labelsize=22)
 
         # set up figure information
         fig.set_size_inches(w=28, h=16)
