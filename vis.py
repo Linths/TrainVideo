@@ -47,8 +47,7 @@ class Visualization():
         self.TEST_PRED = TEST_PRED
         self.VIS_ACC = VIS_ACC
         self.TEST_ACC = TEST_ACC
-        
-        Visualization.plot_image = []
+        self.image_order = []
         
         # make two RGBA versions of the colour list and turn them into colormaps
         colours_long = copy.deepcopy(Visualization.colours)
@@ -168,6 +167,10 @@ class Visualization():
         self.TEST_TARGET.clear()
         self.TEST_PRED.clear()
         Visualization.plot_image.clear()
+
+    def add_data(self, indices, train_data, train_actual, train_predicted):
+        reordered_all = sorted(zip(indices, train_data, train_actual, train_predicted), key=lambda x: x[0])
+        _, self.VIS_DATA, self.VIS_TARGET, self.VIS_PRED = [list(x) for x in zip(*reordered_all)]
 
 def show_images(train_loader, classes):
     # get some random images of the train set, show them and print first four labels
