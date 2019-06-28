@@ -11,9 +11,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 #folders = ["bear (animal)", "car (sedan)", "cloud", "panda", "pigeon", "seagull", "sheep", "suv", "teddy-bear", "van"]
-folders = ["airplane","alarm clock","angel","ant","apple","banana","basket","bed","bell","calculator"]
+folders = ["airplane","alarm clock","angel","ant","apple","banana","basket","bed","bell","calculator", "crab", "pineapple", "snail", "sponge bob", "squirrel"]
 for folder in folders:
-    folder_path = os.path.join('data/train_diff_trans', folder)
+    folder_path = os.path.join('data/train_diff_sponge', folder)
     
     # find all files paths from the folder
     images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]

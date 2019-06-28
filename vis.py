@@ -29,7 +29,7 @@ from PIL import Image
 
 class Visualization():
     alpha = 0.6
-    colours = [[0, 0, 1], [1, 0.2, 0.2], [0.3, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 0.9, 0.9], [0.6, 0.3, 1], [0.4, 1, 0.7], [1, 0.4, 0]]
+    colours = [[0, 0, 1], [1, 0.2, 0.2], [0.3, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 0.9, 0.9], [0.6, 0.3, 1], [0.4, 1, 0.7], [1, 0.4, 0], [0.5, 0.8, 0], [0.5, 0.9, 0.9], [0.2, 0.3, 1], [0.1, 1, 0.5], [1, 0.6, 0.2]]
     # colours: blue, red, green, magenta, cyan, yellow, salmon, violet, turquoise, orange
     
     # class instances below will be initalized in init function
@@ -69,9 +69,9 @@ class Visualization():
         # 1. a visualisation of the test data with images as plot points and a colorbar as legend
         # 2. a visualisation of the training data
         # 3. a visualisation of the accuracy of the test and training data
-
+        
         # set up umap dimensionality reduction
-        fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
+        fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh, transform_seed=np.random.seed(42))
         all_data = np.concatenate((self.VIS_DATA, self.TEST_DATA), axis=0)
         trans = fit.fit(all_data)
         train_emb = trans.transform(self.VIS_DATA)
