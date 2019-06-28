@@ -11,12 +11,6 @@ from torchvision import datasets
 import math
 import os
 
-VIS_DATA = []
-VIS_TARGET = []
-VIS_PRED = []
-
-VIS_OUT = []
-
 # Creating the model
 class ConvNet(nn.Module):
     def __init__(self):
@@ -73,7 +67,12 @@ class ConvNet(nn.Module):
         out = self.fc2(out)
         return out, vis_data
 
-def train_model(model, output_dir): 
+def train_model(model, output_dir):
+    class IndexedDataset(datasets.ImageFolder):
+        def __getitem__(self, index):
+            data, target = super(IndexedDataset, self).__getitem__(index)
+            return data, target, index
+
     # Load data
     train_trans = transforms.Compose([
         transforms.Grayscale(1),
@@ -81,7 +80,7 @@ def train_model(model, output_dir):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.8], std=[0.2])
     ])
-    trainset = datasets.ImageFolder(
+    trainset = IndexedDataset(
         train_dir,
         transform=train_trans
     )
@@ -104,13 +103,20 @@ def train_model(model, output_dir):
         # Per batch
         total_totals = 0
         total_correct = 0
+
+        epoch_indices = []
+        epoch_vis_data = []
+        epoch_vis_target = []
+        epoch_vis_predicted = []
         
-        for i, (images, labels) in enumerate(train_loader):
+        for i, (images, labels, indices) in enumerate(train_loader):
+            # print(f"indices = {indices.numpy()}")
             # Batch i
             # Run the forward pass
             outputs, train_vis_data = model(images)
-            visu.VIS_DATA.extend(train_vis_data)
-            visu.VIS_TARGET.extend(labels.numpy())
+            epoch_indices.extend(indices)
+            epoch_vis_data.extend(train_vis_data)
+            epoch_vis_target.extend(labels.numpy())
             loss = criterion(outputs, labels)
             loss_list.append(loss.item())
             
@@ -123,7 +129,7 @@ def train_model(model, output_dir):
             total = labels.size(0)
             total_totals += total
             _, predicted = torch.max(outputs.data, 1)
-            visu.VIS_PRED.extend(predicted.numpy())
+            epoch_vis_predicted.extend(predicted.numpy())
             correct = (predicted == labels).sum().item()
             total_correct += correct
             accuracy = correct/total
@@ -132,6 +138,8 @@ def train_model(model, output_dir):
             if (i + 1) % 20 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'.format(epoch + 1, num_epochs, i + 1, total_step, loss.item(), (accuracy) * 100))
         
+        visu.add_data(epoch_indices, epoch_vis_data, epoch_vis_target, epoch_vis_predicted)
+
         # Add (0,0) point for the test accuracy graph
         if epoch == 0:
             _, _, _, test_acc, _ = test_model(model)
