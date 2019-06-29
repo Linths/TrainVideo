@@ -7,13 +7,11 @@ import datetime
 import shutil
 import os
 
-# =============================================================================
-# TODO:
-#     - andere lagen visualiseren
-#     - Per batch visualizeren
-# 
-# =============================================================================
-
+# The sketch dataset is licensed under a Creative Commons Attribution 4.0 International License.
+# https://creativecommons.org/licenses/by/4.0/
+# Copyright (C) 2012 Mathias Eitz, James Hays, and Marc Alexa. 2012. How Do Humans Sketch Objects? ACM Trans. Graph. (Proc. SIGGRAPH) 31, 4 (2012), 44:1--44:10.
+# http://cybertron.cg.tu-berlin.de/eitz/projects/classifysketch/
+# The data has been modified from original by splitting the images in train sets and test sets, and subsets
 
 if __name__ == '__main__':
     print("Hello and welcome to the CNN training visualizer.")

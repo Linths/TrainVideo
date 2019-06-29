@@ -12,6 +12,7 @@ import math
 import os
 
 # Creating the model
+# CNN architecture based off https://adventuresinmachinelearning.com/convolutional-neural-networks-tutorial-in-pytorch/
 class ConvNet(nn.Module):
     def __init__(self):
         self.VIS_ACC = []
