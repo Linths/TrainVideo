@@ -1,6 +1,6 @@
 # TrainGif
 
-_Visualizing the training process of a convoluted neural network over time._
+_Visualizing the training process of a convolutional neural network over time._
 
 This tool is extensively discussed in our paper "Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time".
 
