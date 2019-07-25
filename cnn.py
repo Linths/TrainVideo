@@ -1,4 +1,4 @@
-# Visualizing the training process of a convoluted neural network over time.
+# Visualizing the training process of a convolutional neural network over time.
 # Copyright (C) 2019  Michelle Peters & Lindsay Kempen
 
 # This program is free software: you can redistribute it and/or modify
