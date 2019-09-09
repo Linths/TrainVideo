@@ -4,6 +4,9 @@ _Visualizing the training process of a convolutional neural network over time._
 
 This tool is extensively discussed in our paper "Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time" (Michelle Peters & Lindsay Kempen, 2019).
 
+## Paper abstract
+Convolutional neural networks are very complex and not easily interpretable by humans. Several tools give more insight into the training process and decision making of neural networks but are not understandable for people with no or limited knowledge about artificial neural networks. Since these non-experts sometimes do need to rely on the decisions of a neural network, we developed an open-source tool that intuitively visualises the training process of a neural network. We visualize neuron activity using the dimensionality reduction method UMAP. By plotting neuron activity after every epoch, we create a video that shows how the neural network improves itself throughout the training phase.
+
 ## Run instructions
 Python 3.7 is advised. Several libraries are necessary, such as Pytorch (neural network) and OpenCV (video making).  
 Below, you can click the files to navigate to them.
