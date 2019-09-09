@@ -1,4 +1,4 @@
-# TrainGif
+# TrainVideo
 
 _Visualizing the training process of a convolutional neural network over time._
 
