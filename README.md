@@ -2,7 +2,7 @@
 
 _Visualizing the training process of a convolutional neural network over time._
 
-This tool is extensively discussed in our paper "Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time" (Peters et al., 2019).
+This tool is extensively discussed in our paper "Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time" (Peters et al., 2019).  
 Main authors: Michelle Peters & Lindsay Kempen
 
 ## Paper abstract
