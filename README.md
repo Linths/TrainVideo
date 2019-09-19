@@ -1,6 +1,6 @@
 # TrainVideo :chart_with_upwards_trend::film_strip:
 
-This tool creates videos to visualize the training process of a convolutional neural network.  
+This tool creates videos to visualise the training process of a convolutional neural network.  
 It is developed as part of a research paper.
 
 :page_facing_up: _Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time_ (Peters et al., 2019)  
