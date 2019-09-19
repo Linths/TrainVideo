@@ -24,7 +24,7 @@ Below, you can click the files to navigate to them.
 - Tweak the program parameters in [`const.py`](const.py) where desired. It contains CNN parameters, visualization parameters, and more. 
 - Change the image classes?
     1. Create a new training subset and testing subset in the `data` folder
-    2. If desired, you can transform the training images using `transform_images.py`
+    2. If desired, you can transform the training images using [`transform_images.py`](transform_images.py)
     3. Update `num_classes`, `train_dir` and `test_dir` in [`const.py`](const.py)
 
 ## Copyright
