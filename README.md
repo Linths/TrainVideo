@@ -3,7 +3,7 @@
 This tool creates videos to visualise the training process of a convolutional neural network.  
 It is developed as part of a research paper.
 
-:page_facing_up: _Neural Networks for Non-Experts: Intuitively Visualising the Training Process Over Time_ (Peters et al., 2019)  
+:page_facing_up: _Visualising the Training Process of Convolutional Neural Networks for Non-Experts_ (Peters et al., 2019)  
 :pencil2: Main authors: Michelle Peters & Lindsay Kempen  
 
 ## Paper abstract
