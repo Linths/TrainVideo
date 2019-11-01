@@ -48,7 +48,7 @@ class Visualization():
     alpha = 0.6
     colours = [[0, 0, 1], [1, 0.2, 0.2], [0.3, 1, 0], [1, 0, 1], [0, 1, 1], [1, 0.8, 0], [1, 0.9, 0.9], [0.6, 0.3, 1], [0.4, 1, 0.7], [1, 0.4, 0]]
     # colours: blue, red, green, magenta, cyan, yellow, salmon, violet, turquoise, orange
-    
+
     # class instances below will be initalized in init function
     newcmp = None
     barcmp = None
@@ -65,7 +65,7 @@ class Visualization():
         self.VIS_ACC = VIS_ACC
         self.TEST_ACC = TEST_ACC
         self.image_order = []
-        
+
         # make two RGBA versions of the colour list and turn them into colormaps
         colours_long = copy.deepcopy(Visualization.colours)
         for col in colours_long:
@@ -137,8 +137,8 @@ class Visualization():
         # set up figure information
         fig.set_size_inches(w=28, h=16)
         plt.suptitle(f"The neural network's activity when given sketch images, after training for {epochs_passed} epochs", fontsize=30)
-        plt.figtext(.5,.93,"Activations of all 100 neurons in the CNN's first fully connected layer, reduced to 2 dimensions using UMAP", fontsize=24, ha='center')
-        
+        plt.figtext(.5,.93,f"Activations of all {no_dimens} neurons in the  CNN's first fully connected layer, reduced to 2 dimensions using UMAP", fontsize=24, ha='center')
+
         # set up output information
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
