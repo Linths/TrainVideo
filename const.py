@@ -22,8 +22,8 @@ batch_size = 25
 learning_rate = 0.0001
 
 # Data access
-train_dir =  r"./data/train_sub_trans"
-test_dir =  r"./data/test_sub_2"
+train_dir =  r"./data/train_hard"
+test_dir =  r"./data/test_hard"
 model_dir = r"./model"
 
 # NN scaling params

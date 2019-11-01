@@ -65,6 +65,7 @@ class Visualization():
         self.VIS_ACC = VIS_ACC
         self.TEST_ACC = TEST_ACC
         self.image_order = []
+        self.trans = None
         
         # make two RGBA versions of the colour list and turn them into colormaps
         colours_long = copy.deepcopy(Visualization.colours)
@@ -87,11 +88,12 @@ class Visualization():
         # 3. a visualisation of the accuracy of the test and training data
 
         # set up umap dimensionality reduction
-        fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
         all_data = np.concatenate((self.VIS_DATA, self.TEST_DATA), axis=0)
-        trans = fit.fit(all_data)
-        train_emb = trans.transform(self.VIS_DATA)
-        test_emb = trans.transform(self.TEST_DATA)
+        if self.trans == None:
+            fit = umap.UMAP(random_state=np.random.seed(42), n_neighbors=n_neigh)
+            self.trans = fit.fit(all_data)
+        train_emb = self.trans.transform(self.VIS_DATA)
+        test_emb = self.trans.transform(self.TEST_DATA)
         x = test_emb[:,0]
         y = test_emb[:,1]
         train_x = train_emb[:,0]
