@@ -24,7 +24,7 @@ def make(output_dir):
     print(output_dir)
     images = []
     for filename in os.listdir(output_dir):
-        if (filename.endswith(".png")):
+        if (filename.endswith(".png") or filename.endswith(".jpg")):
             print(filename)
             img = cv2.imread(output_dir + "/" + filename)
             height, width, layers = img.shape

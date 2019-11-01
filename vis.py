@@ -137,7 +137,7 @@ class Visualization():
         # set up figure information
         fig.set_size_inches(w=28, h=16)
         plt.suptitle(f"The neural network's activity when given sketch images, after training for {epochs_passed} epochs", fontsize=30)
-        plt.figtext(.5,.93,f"Activations of all {no_dimens} neurons in the  CNN's first fully connected layer, reduced to 2 dimensions using UMAP", fontsize=24, ha='center')
+        plt.figtext(.5,.93,f"Activations of all {no_dimens} neurons in the CNN's first fully connected layer, reduced to 2 dimensions using UMAP", fontsize=24, ha='center')
 
         # set up output information
         if not os.path.exists(output_dir):
@@ -198,8 +198,8 @@ def show_images(train_loader, classes):
 
 def imshow(img):
     # show an image
-    img = img / 2 + 0.5;    # unnormalize
-    npimg = img.numpy();
+    img = img / 2 + 0.5    # unnormalize
+    npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1,2,0)))
     plt.show()
 
