@@ -1,10 +1,21 @@
 # TrainVideo :chart_with_upwards_trend::film_strip:
 
 This tool creates videos to visualise the training process of a convolutional neural network.  
-It is developed as part of a research paper.
+It is developed as part of a research paper presented at the 31st Benelux Conference on AI 2019.
 
 :page_facing_up: _Visualising the Training Process of Convolutional Neural Networks for Non-Experts_ (Peters et al., 2019)  
 :pencil2: Main authors: Michelle Peters & Lindsay Kempen  
+:books: Full text via [ceur-ws.org](http://ceur-ws.org/Vol-2491/#paper108)
+
+Please cite us:
+```
+@inproceedings{peters2019visualising,
+  title={Visualising the Training Process of Convolutional Neural Networks for Non-Experts},
+  author={Peters, Michelle and Kempen, Lindsay and Nauta, Meike and Seifert, Christin},
+  booktitle={31th Benelux Conference on Artificial Intelligence, BNAIC 2019},
+  year={2019}
+}
+```
 
 ## Paper abstract
 Convolutional neural networks are very complex and not easily interpretable by humans. Several tools give more insight into the training process and decision making of neural networks but are not understandable for people with no or limited knowledge about artificial neural networks. Since these non-experts sometimes do need to rely on the decisions of a neural network, we developed an open-source tool that intuitively visualises the training process of a neural network. We visualize neuron activity using the dimensionality reduction method UMAP. By plotting neuron activity after every epoch, we create a video that shows how the neural network improves itself throughout the training phase. We evaluated our method by analysing the visualization on a CNN training on a sketch data set. We show how a video of the training over time gives more insight than a static visualisation at the end of training, as well as which features are useful to visualise for non-experts. We conclude that most of the useful deductions made from the videos are suitable for non-experts, which indicates that the visualization tool might be helpful in practice.
